@@ -18,14 +18,16 @@ export default async function AuthMiddleware(
   res: Response,
   next: NextFunction,
 ): Promise<void | Response<{ message: string }>> {
-  if (!req.headers.authorization) {
+  // 요청이 들어오는 유저가 토큰과, 게스트 ID 쿠키 이 두 가지 모두 존재하지 않을 경우
+  if (
+    (!req.headers.authorization || req.headers.authorization === 'null') &&
+    !req.cookies.guestId
+  ) {
     return res.status(StatusCodes.UNAUTHORIZED).json({
-      message: '사용자 정보가 존재하지 않습니다.',
+      message: '사용자 정보가 존재하지 않습니다. 다시 로그인 해주세요.',
     });
-  }
-
-  // Guest 세션이 존재할 때 기존 Guest 세션 삭제 처리
-  if (req.cookies?.guestId) {
+  } else {
+    // Guest 세션이 존재할 때 기존 Guest 세션 삭제 처리
     await redis.del(`${Authority.GUEST}:guestId=${req.cookies.guestId}`);
 
     // 기존 유저 세션 데이터가 존재할 시 GuestId 제거
@@ -136,10 +138,9 @@ function checkTokenTypeRef(token: string[]): string | undefined {
 async function getUser(payload: JwtPayload): Promise<{
   id: string;
   email: string;
-  loginId: string;
-  name: string;
+  loginId: string | null;
+  name: string | null;
   nickname: string;
-  image: string | null;
   gender: Gender | null;
   birthDay: Date | null;
   phoneNumber: string | null;
@@ -165,7 +166,6 @@ async function getUser(payload: JwtPayload): Promise<{
       loginId: true,
       name: true,
       nickname: true,
-      image: true,
       gender: true,
       birthDay: true,
       phoneNumber: true,

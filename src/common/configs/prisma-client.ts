@@ -10,6 +10,8 @@ import {
   TIMEZONE,
   DB_USER,
   DB_IDLE_TIMEOUT,
+  DB_PUBLICKEYRETRIEVAL,
+  DB_USESSL,
 } from './keys';
 import { PrismaClient } from '../../../generated/prisma/client';
 
@@ -24,6 +26,8 @@ const adapter = new PrismaMariaDb({
   acquireTimeout: DB_POOL_TIMEOUT,
   connectTimeout: DB_CONNECT_TIMEOUT,
   idleTimeout: DB_IDLE_TIMEOUT,
+  allowPublicKeyRetrieval: DB_PUBLICKEYRETRIEVAL,
+  ssl: DB_USESSL,
 });
 
 export const prisma = new PrismaClient({
