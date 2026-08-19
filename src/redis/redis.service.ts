@@ -1,4 +1,4 @@
-import Redis from "ioredis";
+import Redis from 'ioredis';
 
 export class RedisService {
   private redis: Redis;
@@ -15,10 +15,26 @@ export class RedisService {
   }
 
   async setex(key: string, ttl: number, value: string): Promise<void> {
-    await this.redis.set(key, value, "EX", ttl);
+    await this.redis.set(key, value, 'EX', ttl);
   }
 
   async delete(key: string): Promise<void> {
     await this.redis.del(key);
+  }
+
+  async incr(key: string): Promise<void> {
+    await this.redis.incr(key);
+  }
+
+  async zincr(key: string, member: string): Promise<void> {
+    await this.redis.zincrby(key, 1, member);
+  }
+
+  async zrevrange(key: string, start: number, stop: number): Promise<string[]> {
+    return await this.redis.zrevrange(key, start, stop);
+  }
+
+  async zscore(key: string, member: string): Promise<string | null> {
+    return await this.redis.zscore(key, member);
   }
 }
