@@ -22,7 +22,7 @@ export class CommentsRepository {
     await this.prisma.comment.create({
       data: {
         context: body.context,
-        type: body.type,
+        type: 'COMMENT',
         postId: id,
         userId: userId,
       },
@@ -40,7 +40,8 @@ export class CommentsRepository {
         postId: params.id,
         userId: userId,
         context: body.context,
-        parentId: params.commentId,
+        type: 'REPLY',
+        parentId: params.parentId,
       },
     });
   };
@@ -65,57 +66,16 @@ export class CommentsRepository {
   // 게시글 댓글 존재 유무 조회
   findByCommentId = async (
     id: string,
-    commentId: string,
+    parentId: string,
   ): Promise<{
     id: string;
   } | null> => {
     return await this.prisma.comment.findFirst({
       where: {
         postId: id,
-        id: commentId,
+        id: parentId,
+        type: 'COMMENT',
         parentId: null,
-        deletedAt: 'FALSE',
-      },
-      select: {
-        id: true,
-      },
-    });
-  };
-
-  // 댓글 소유 유무 확인
-  checkUseComment = async (
-    params: TRequestCommentUpdateDto,
-    userId: string,
-  ): Promise<{
-    id: string;
-  } | null> => {
-    return await this.prisma.comment.findFirst({
-      where: {
-        postId: params.id,
-        id: params.commentId,
-        userId: userId,
-        parentId: null,
-        deletedAt: 'FALSE',
-      },
-      select: {
-        id: true,
-      },
-    });
-  };
-
-  // 댓글 소유 유무 확인
-  checkUseReplyComment = async (
-    params: TRequestReplyCommentUpdateDto,
-    userId: string,
-  ): Promise<{
-    id: string;
-  } | null> => {
-    return await this.prisma.comment.findFirst({
-      where: {
-        postId: params.id,
-        id: params.commentId,
-        parentId: params.replyId,
-        userId: userId,
         deletedAt: 'FALSE',
       },
       select: {
@@ -135,6 +95,7 @@ export class CommentsRepository {
         postId: params.id,
         id: params.commentId,
         userId: userId,
+        type: 'COMMENT',
         parentId: null,
         deletedAt: 'FALSE',
       },
@@ -148,14 +109,15 @@ export class CommentsRepository {
   replyUpdate = async (
     params: TRequestReplyCommentUpdateDto,
     userId: string,
-    body: any,
+    body: TUpdateCommentDto,
   ): Promise<void> => {
     await this.prisma.comment.update({
       where: {
         postId: params.id,
-        id: params.commentId,
-        parentId: params.replyId,
+        id: params.replyId,
+        parentId: params.parentId,
         userId: userId,
+        type: 'REPLY',
         deletedAt: 'FALSE',
       },
       data: {
@@ -174,6 +136,7 @@ export class CommentsRepository {
         postId: params.id,
         id: params.commentId,
         userId: userId,
+        type: 'COMMENT',
         parentId: null,
         deletedAt: 'FALSE',
       },
@@ -191,9 +154,10 @@ export class CommentsRepository {
     await this.prisma.comment.update({
       where: {
         postId: params.id,
-        id: params.commentId,
-        parentId: params.replyId,
+        id: params.replyId,
+        parentId: params.parentId,
         userId: userId,
+        type: 'REPLY',
         deletedAt: 'FALSE',
       },
       data: {

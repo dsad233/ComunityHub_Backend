@@ -44,7 +44,7 @@ export class CommentsService {
 
     const comment = await this.commentsRepository.findByCommentId(
       params.id,
-      params.commentId,
+      params.parentId,
     );
 
     if (!comment) {
@@ -60,15 +60,6 @@ export class CommentsService {
     userId: string,
     body: TUpdateCommentDto,
   ): Promise<void> => {
-    const comment = await this.commentsRepository.checkUseComment(
-      params,
-      userId,
-    );
-
-    if (!comment) {
-      throw new NotFound('해당 댓글을 찾을 수 없습니다.');
-    }
-
     await this.commentsRepository.update(params, userId, body);
   };
 
@@ -78,21 +69,6 @@ export class CommentsService {
     userId: string,
     body: TUpdateCommentDto,
   ): Promise<void> => {
-    const post = await this.commentsRepository.findByPostId(params.id);
-
-    if (!post) {
-      throw new NotFound('게시글을 찾을 수 없습니다.');
-    }
-
-    const comment = await this.commentsRepository.checkUseReplyComment(
-      params,
-      userId,
-    );
-
-    if (!comment) {
-      throw new NotFound('해당 대댓글을 찾을 수 없습니다.');
-    }
-
     await this.commentsRepository.replyUpdate(params, userId, body);
   };
 
@@ -101,15 +77,6 @@ export class CommentsService {
     params: TRequestCommentUpdateDto,
     userId: string,
   ): Promise<void> => {
-    const comment = await this.commentsRepository.checkUseComment(
-      params,
-      userId,
-    );
-
-    if (!comment) {
-      throw new NotFound('해당 댓글을 찾을 수 없습니다.');
-    }
-
     await this.commentsRepository.remove(params, userId);
   };
 
@@ -118,21 +85,6 @@ export class CommentsService {
     params: TRequestReplyCommentUpdateDto,
     userId: string,
   ): Promise<void> => {
-    const post = await this.commentsRepository.findByPostId(params.id);
-
-    if (!post) {
-      throw new NotFound('게시글을 찾을 수 없습니다.');
-    }
-
-    const comment = await this.commentsRepository.checkUseReplyComment(
-      params,
-      userId,
-    );
-
-    if (!comment) {
-      throw new NotFound('해당 대댓글을 찾을 수 없습니다.');
-    }
-
     await this.commentsRepository.replyRemove(params, userId);
   };
 }

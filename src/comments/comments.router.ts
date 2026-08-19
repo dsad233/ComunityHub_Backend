@@ -4,6 +4,7 @@ import { prisma } from '../common/configs/prisma-client';
 import { CommentsRepository } from './comments.repository';
 import { CommentsService } from './comments.service';
 import { CommentsController } from './comments.controller';
+
 import AsyncWrapper from '../common/middlewares/asyncWrapper';
 import AuthMiddleware from '../common/middlewares/auth.middleware';
 
@@ -21,19 +22,19 @@ router.post(
 );
 // 대댓글 생성
 router.post(
-  '/:id/comments/:commentId',
+  '/:id/comments/:parentId/replies',
   AuthMiddleware,
   AsyncWrapper(commentsController.replyCreate),
 );
 // 댓글 수정
 router.patch(
-  '/:id/comments/:commentId',
+  '/:id/comments/:commentId/update',
   AuthMiddleware,
   AsyncWrapper(commentsController.update),
 );
 // 대댓글 수정
 router.patch(
-  '/:id/comments/:commentId/replies/:replyId',
+  '/:id/comments/:parentId/replies/:replyId/update',
   AuthMiddleware,
   AsyncWrapper(commentsController.replyUpdate),
 );
@@ -43,9 +44,9 @@ router.patch(
   AuthMiddleware,
   AsyncWrapper(commentsController.remove),
 );
-// 대댓글 수정
+// 대댓글 삭제
 router.patch(
-  '/:id/comments/:commentId/replies/:replyId/remove',
+  '/:id/comments/:parentId/replies/:replyId/remove',
   AuthMiddleware,
   AsyncWrapper(commentsController.replyRemove),
 );
