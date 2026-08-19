@@ -1,6 +1,9 @@
 model Image {
   id String  @id @default(uuid())
-  url String?
+  image Bytes @db.MediumBlob
+  type Type? 
+  typeId String @map("type_id")
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 

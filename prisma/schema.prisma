@@ -33,6 +33,8 @@ enum Category {
 
 // 게시글, 댓글, 대댓글 분기 처리
 enum Type {
+  // 유저
+  USER
   // 게시글
   POST
   // 댓글

@@ -1,11 +1,10 @@
 model User {
   id    String  @id @default(uuid()) 
-  email String  @unique @db.VarChar(254)
-  loginId String @unique @db.VarChar(13) @map("login_id")
+  email String @unique @db.VarChar(254)
+  loginId String? @unique @db.VarChar(13) @map("login_id")
   password String
-  name  String @db.VarChar(50)
+  name  String? @db.VarChar(50)
   nickname String @unique @db.VarChar(32)
-  image String? 
   gender Gender? 
   birthDay DateTime? @db.Date @map("birth_day")
   phoneNumber String? @unique @db.VarChar(15) @map("phone_number")
@@ -17,11 +16,14 @@ model User {
   updatedAt DateTime @updatedAt @map("updated_at")
   deletedAt State @default(FALSE) @map("deleted_at")
 
+  // many to one
+  roles Role?
+
   // one to many
-  roles Role[]
   posts Post[]
   comments Comment[]
   likes Like[]
+  account_types Account_type[]
 
   @@map(name: "users")
 }

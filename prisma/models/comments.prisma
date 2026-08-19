@@ -1,7 +1,7 @@
 model Comment {
   id String  @id @default(uuid())
   context String @db.Text
-  type Type @default(POST)
+  type Type @default(COMMENT)
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
