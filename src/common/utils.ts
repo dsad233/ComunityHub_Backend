@@ -176,20 +176,23 @@ export function categoryTranslate(category: string): {
 
 // 게시글 내용 표시 제한 함수
 export function contextTranslate(html: string | null): string | null {
-  // html tag 제거 후, 공백 자르기
-  let contextStr = html
-    ? html.replace(/(<([^>]+)>)/gi, '\n').slice(0, html.indexOf('&nbsp;') - 7)
-    : null;
+  // html tag 제거 처리
+  let contextStr = html ? html.replace(/(<([^>]+)>)/gi, '\n') : null;
 
   if (contextStr) {
-    // 게시글 내용이 표기 범위를 초과할 때, 글자 제한
+    // &nbsp; 공백 유효시, 공백 제거후 리턴
+    if (contextStr.indexOf('&nbsp;') !== -1) {
+      contextStr = contextStr.slice(0, contextStr.indexOf('&nbsp;')) + '...';
+
+      return contextStr;
+    }
+
+    // 게시글 내용이 표기 범위를 초과할 때, 글자 제한 처리
     if (contextStr.length > 100) {
       contextStr = contextStr.slice(0, 100) + '...';
 
       return contextStr;
     }
-
-    contextStr = contextStr + '...';
   }
 
   return contextStr;
