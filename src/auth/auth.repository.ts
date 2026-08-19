@@ -1,5 +1,5 @@
-import { PrismaClient, State } from '../../generated/prisma/client';
-import { hashPassword } from '../common/utils';
+import { PrismaClient, Provider, State } from '../../generated/prisma/client';
+import { createRandomPassword, hashPassword } from '../common/utils';
 import { OmitTCreateUserDto } from './dto/createUserDto';
 
 export class AuthRepository {
@@ -9,9 +9,25 @@ export class AuthRepository {
     this.prisma = prisma;
   }
 
+  // 계정 유형 조회
+  getAccountType = async (id: string): Promise<Provider[]> => {
+    const accountTypes = await this.prisma.account_type.findMany({
+      where: {
+        userId: id,
+      },
+      select: {
+        provider: true,
+      },
+    });
+
+    return accountTypes.map((provider) => {
+      return provider.provider;
+    });
+  };
+
   // 중복 이메일 유무 체크
   existEmail = async (email: string): Promise<{ email: string } | null> => {
-    return await this.prisma.user.findUnique({
+    return await this.prisma.user.findFirst({
       where: { email: email },
       select: { email: true },
     });
@@ -20,7 +36,7 @@ export class AuthRepository {
   // 중복 아이디 유무 체크
   existLoginId = async (
     loginId: string,
-  ): Promise<{ loginId: string } | null> => {
+  ): Promise<{ loginId: string | null } | null> => {
     return await this.prisma.user.findUnique({
       where: { loginId: loginId },
       select: { loginId: true },
@@ -54,15 +70,45 @@ export class AuthRepository {
         email: dto.email,
         loginId: dto.loginId,
         password: await hashPassword(dto.password),
-        name: dto.name,
+        name: dto.name ?? null,
         nickname: dto.nickname,
-        image: dto.image ?? null,
         gender: dto.gender ?? null,
         birthDay: dto.birthDay ?? null,
         phoneNumber: dto.phoneNumber ?? null,
         isPublic: dto.isPublic,
         roles: {
           create: {},
+        },
+        account_types: {
+          create: {},
+        },
+      },
+    });
+  };
+
+  // 구글 로그인 이용자 계정 생성
+  googleUserCreate = async ({
+    email,
+    nickname,
+    email_verified,
+  }: {
+    email: string;
+    nickname: string;
+    email_verified: boolean;
+  }) => {
+    await this.prisma.user.create({
+      data: {
+        email: email,
+        nickname: nickname,
+        password: await createRandomPassword(),
+        verify: email_verified ? State.TRUE : State.FALSE,
+        roles: {
+          create: {},
+        },
+        account_types: {
+          create: {
+            provider: Provider.GOOGLE,
+          },
         },
       },
     });
@@ -73,6 +119,7 @@ export class AuthRepository {
     return await this.prisma.user.findFirst({
       where: {
         email: email,
+        deletedAt: 'FALSE',
       },
       select: {
         verify: true,
@@ -90,7 +137,7 @@ export class AuthRepository {
     verify: State;
   } | null> => {
     return await this.prisma.user.findFirst({
-      where: { email: email },
+      where: { email: email, deletedAt: 'FALSE' },
       select: {
         id: true,
         email: true,
@@ -105,13 +152,14 @@ export class AuthRepository {
     loginId: string,
   ): Promise<{
     id: string;
-    loginId: string;
+    loginId: string | null;
     password: string;
     verify: State;
   } | null> => {
     return await this.prisma.user.findFirst({
       where: {
         loginId: loginId,
+        deletedAt: 'FALSE',
       },
       select: {
         id: true,
@@ -124,13 +172,12 @@ export class AuthRepository {
 
   // 이메일 유저 페이로드 검증
   verifyEmailPayload = async (
-    id: string,
     email: string,
   ): Promise<{ id: string; email: string } | null> => {
     return await this.prisma.user.findFirst({
       where: {
-        id: id,
         email: email,
+        deletedAt: 'FALSE',
       },
       select: {
         id: true,
@@ -141,13 +188,12 @@ export class AuthRepository {
 
   // loginId 유저 페이로드 검증
   verifyLoginIdPayload = async (
-    id: string,
     loginId: string,
-  ): Promise<{ id: string; loginId: string } | null> => {
+  ): Promise<{ id: string; loginId: string | null } | null> => {
     return await this.prisma.user.findFirst({
       where: {
-        id: id,
-        email: loginId,
+        loginId: loginId,
+        deletedAt: 'FALSE',
       },
       select: {
         id: true,
@@ -161,6 +207,7 @@ export class AuthRepository {
     await this.prisma.user.update({
       where: {
         email: email,
+        deletedAt: 'FALSE',
       },
       data: {
         verify: State.TRUE,
@@ -176,6 +223,7 @@ export class AuthRepository {
     await this.prisma.user.update({
       where: {
         email: email,
+        deletedAt: 'FALSE',
       },
       data: {
         password: await hashPassword(newPassword),

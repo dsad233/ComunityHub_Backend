@@ -1,6 +1,7 @@
 import express from 'express';
 import { prisma } from '../common/configs/prisma-client';
 import { redis } from '../redis/redis.config';
+import passport from 'passport';
 
 import { AuthRepository } from './auth.repository';
 import { AuthService } from './auth.service';
@@ -14,19 +15,17 @@ import { MailerService } from '../mailer/mailer.service';
 
 const router: express.Router = express.Router();
 
-const redisService = new RedisService(redis);
-const jwtService = new JwtService();
-const mailerService = new MailerService();
-
 const authRepository = new AuthRepository(prisma);
 const authService = new AuthService(
   authRepository,
-  redisService,
-  jwtService,
-  mailerService,
+  new RedisService(redis),
+  new JwtService(),
+  new MailerService(),
 );
 const authController = new AuthController(authService);
 
+// 로그인 아이디 유무 확인
+router.get('/check/id', AsyncWrapper(authController.checkLoginId));
 // 회원가입
 router.post('/signup', AsyncWrapper(authController.signUp));
 // 유저 이메일 인증 여부 업데이트
@@ -45,6 +44,23 @@ router.post('/certification', AsyncWrapper(authController.certifiEmail));
 router.post(
   '/authentication',
   AsyncWrapper(authController.authenticationEmail),
+);
+
+/**
+ * OAuth 2.0 Google 로그인
+ */
+
+// Google 로그인 요청
+router.get('/signin/social/google', passport.authenticate('google'));
+
+// Google 로그인 콜백 (로그인 완료 후, 토큰 발급)
+router.get(
+  '/oauth2/callback/google',
+  passport.authenticate('google', {
+    session: false,
+    prompt: 'consent',
+  }),
+  AsyncWrapper(authController.googleCallback),
 );
 
 export default router;

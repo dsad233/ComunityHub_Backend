@@ -8,7 +8,12 @@ import {
   SignInDto,
   UpdatePassowrdDto,
   UpdatePasswordRequestDto,
+  AuthEmailDto,
 } from './dto';
+import {
+  GOOGLE_CALLBACK_LOGIN_URL,
+  GOOGLE_CALLBACK_SUCCESS_URL,
+} from '../common/configs/keys';
 
 export class AuthController {
   private readonly authService: AuthService;
@@ -16,6 +21,17 @@ export class AuthController {
   constructor(authService: AuthService) {
     this.authService = authService;
   }
+
+  // 로그인 아이디 유무 확인
+  checkLoginId = async (
+    req: Request,
+    res: Response,
+  ): Promise<Response<{ message: string }>> => {
+    return res.status(StatusCodes.OK).json({
+      message: '로그인 아이디 유무 확인 완료.',
+      data: await this.authService.checkLoginId(req.query.loginId as string),
+    });
+  };
 
   // 유저 생성
   signUp = async (
@@ -120,11 +136,45 @@ export class AuthController {
   ): Promise<Response<{ message: string }>> => {
     const token = await this.authService.authenticationEmail(
       (await CertifiEmailDto(req.body.email)).email,
-      req.body.code,
+      await AuthEmailDto(req.body),
     );
 
     return res
       .status(StatusCodes.OK)
       .json({ message: '이메일 인증 완료.', token: token });
+  };
+
+  /**
+   * OAuth 2.0 Google 로그인
+   */
+
+  // Google 로그인 요청
+  googleCallback = async (req: Request, res: Response): Promise<void> => {
+    // 이미 회원 가입 이력이 있을 시에, 로그인 처리
+    if (req.user.id) {
+      const tokens = await this.authService.googleSignIn(req.user);
+      res.writeHead(StatusCodes.OK, {
+        'Content-Type': 'text/html; charset=utf-8',
+      });
+      res.write(
+        `<script>window.location.href="${GOOGLE_CALLBACK_SUCCESS_URL}?res_ack=${tokens.access_token}&res_ref=${tokens.refresh_token}"</script>`,
+      );
+
+      return;
+    }
+
+    // 구글 계정으로 회원 가입 진행 처리
+    await this.authService.googleSignUp(req.user);
+    res.writeHead(StatusCodes.OK, {
+      'Content-Type': 'text/html; charset=utf-8',
+    });
+    res.write(
+      "<script>alert('회원가입이 완료되었습니다. 다시 로그인을 시도해 주세요.')</script>",
+    );
+    res.write(
+      `<script>window.location.href="${GOOGLE_CALLBACK_LOGIN_URL}"</script>`,
+    );
+
+    return;
   };
 }

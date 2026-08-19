@@ -1,9 +1,16 @@
-import { BadRequest, NotFound, Unauthorized, Conflict } from 'http-errors';
+import {
+  BadRequest,
+  NotFound,
+  Unauthorized,
+  Conflict,
+  Forbidden,
+} from 'http-errors';
 import { AuthRepository } from './auth.repository';
 import { RedisService } from '../redis/redis.service';
 import { comparePassword, randomConst, regEx } from '../common/utils';
 import {
   OmitTCreateUserDto,
+  TAuthEmailDto,
   TSignInDto,
   TUpdatePasswordRequestDto,
 } from './dto';
@@ -16,8 +23,13 @@ import {
 } from '../common/configs/keys';
 import { TYPE } from '../common/libs';
 import { MailerService } from '../mailer/mailer.service';
-import { State } from '../../generated/prisma/enums';
+import { Gender, Provider, State } from '../../generated/prisma/enums';
 import crypto from 'crypto';
+import {
+  adjectives,
+  animals,
+  uniqueNamesGenerator,
+} from 'unique-names-generator';
 
 export class AuthService {
   private readonly authRepository: AuthRepository;
@@ -36,14 +48,23 @@ export class AuthService {
     this.mailerService = mailerService;
   }
 
+  // 로그인 아이디 유무 확인
+  checkLoginId = async (
+    loginId: string,
+  ): Promise<{ loginId: string | null } | null> => {
+    return await this.authRepository.existLoginId(loginId);
+  };
+
   // 유저 생성
   signUp = async (dto: OmitTCreateUserDto): Promise<void> => {
     const alreadyEmail = await this.authRepository.existEmail(dto.email);
+
     if (alreadyEmail) {
       throw new Conflict('이미 존재하는 이메일 입니다.');
     }
 
     const alreadyUserId = await this.authRepository.existLoginId(dto.loginId);
+
     if (alreadyUserId) {
       throw new Conflict('이미 존재하는 사용자 ID 입니다.');
     }
@@ -51,6 +72,7 @@ export class AuthService {
     const alreadyNickname = await this.authRepository.existNickname(
       dto.nickname,
     );
+
     if (alreadyNickname) {
       throw new Conflict('이미 존재하는 닉네임 입니다.');
     }
@@ -96,6 +118,22 @@ export class AuthService {
 
       if (!user) {
         throw new NotFound('존재하지 않는 유저 입니다.');
+      }
+
+      // 소셜 로그인 여부 확인
+      const accountType = await this.authRepository.getAccountType(user.id);
+
+      if (accountType.length === 0) {
+        throw new Forbidden('접근 권한이 없습니다. 문의 해주세요.');
+      }
+
+      if (
+        accountType.length > 0 &&
+        !accountType.toString().includes(Provider.GENERAL)
+      ) {
+        throw new BadRequest(
+          '해당 계정은 소셜 계정입니다. 소셜 로그인을 이용해 주세요.',
+        );
       }
 
       if (!(await comparePassword(dto.password, user.password))) {
@@ -206,7 +244,9 @@ export class AuthService {
   };
 
   // 토큰 재발급
-  reissue = async (refreshToken: string) => {
+  reissue = async (
+    refreshToken: string,
+  ): Promise<{ access_token: string; refresh_token: string }> => {
     const payload = await this.jwtService.verify(
       refreshToken,
       TYPE.TokenType.REFRESH,
@@ -220,10 +260,7 @@ export class AuthService {
 
     // 이메일 로그인 처리
     if (payload.email && payload.email.match(regEx.email)) {
-      const user = await this.authRepository.verifyEmailPayload(
-        payload.id,
-        payload.email,
-      );
+      const user = await this.authRepository.verifyEmailPayload(payload.email);
 
       if (!user) {
         throw new NotFound('존재하지 않는 유저 입니다.');
@@ -256,44 +293,43 @@ export class AuthService {
       );
 
       return { access_token: accessToken, refresh_token: refreshToken };
-    } else if (payload.loginId) {
-      const user = await this.authRepository.verifyLoginIdPayload(
-        payload.id,
-        payload.loginId,
-      );
-
-      if (!user) {
-        throw new NotFound('존재하지 않는 유저 입니다.');
-      }
-
-      // Access 토큰 생성
-      const newAccessToken = await this.jwtService.sign(
-        user,
-        JWT_ACCESS_SECRET_KEY,
-        TYPE.TokenType.ACCESS,
-      );
-
-      // RefreshToken 생성
-      const newRefreshToken = await this.jwtService.sign(
-        user,
-        JWT_REFRESH_SECRET_KEY,
-        TYPE.TokenType.REFRESH,
-      );
-
-      await this.redisService.setex(
-        `${TYPE.PrefixType.USERS}:${TYPE.TokenType.ACCESS}:id=${user.id}`,
-        JWT_ACCESS_TTL,
-        newAccessToken,
-      );
-
-      await this.redisService.setex(
-        `${TYPE.PrefixType.USERS}:${TYPE.TokenType.REFRESH}:id=${user.id}`,
-        JWT_REFRESH_TTL,
-        newRefreshToken,
-      );
-
-      return { access_token: newAccessToken, refresh_token: newRefreshToken };
     }
+
+    const user = await this.authRepository.verifyLoginIdPayload(
+      payload.loginId as string,
+    );
+
+    if (!user) {
+      throw new NotFound('존재하지 않는 유저 입니다.');
+    }
+
+    // Access 토큰 생성
+    const newAccessToken = await this.jwtService.sign(
+      user,
+      JWT_ACCESS_SECRET_KEY,
+      TYPE.TokenType.ACCESS,
+    );
+
+    // RefreshToken 생성
+    const newRefreshToken = await this.jwtService.sign(
+      user,
+      JWT_REFRESH_SECRET_KEY,
+      TYPE.TokenType.REFRESH,
+    );
+
+    await this.redisService.setex(
+      `${TYPE.PrefixType.USERS}:${TYPE.TokenType.ACCESS}:id=${user.id}`,
+      JWT_ACCESS_TTL,
+      newAccessToken,
+    );
+
+    await this.redisService.setex(
+      `${TYPE.PrefixType.USERS}:${TYPE.TokenType.REFRESH}:id=${user.id}`,
+      JWT_REFRESH_TTL,
+      newRefreshToken,
+    );
+
+    return { access_token: newAccessToken, refresh_token: newRefreshToken };
   };
 
   // 패스워드 변경
@@ -345,7 +381,7 @@ export class AuthService {
   // 패스워드 변경 이메일 인증 완료
   authenticationEmail = async (
     email: string,
-    code: string,
+    body: TAuthEmailDto,
   ): Promise<string> => {
     const authCode = await this.redisService.get(
       `${TYPE.PrefixType.USERS}:CERTIFI:email=${email}`,
@@ -355,7 +391,7 @@ export class AuthService {
       throw new NotFound('인증 코드가 만료되었습니다. 다시 요청해 주세요.');
     }
 
-    if (authCode !== code) {
+    if (Number(authCode) !== body.code) {
       throw new Unauthorized(
         '인증 번호가 일치하지 않습니다. 다시 시도해주세요.',
       );
@@ -376,5 +412,96 @@ export class AuthService {
     );
 
     return token;
+  };
+
+  /**
+   * OAuth 2.0 Google 로그인
+   */
+
+  // Google 회원가입 요청
+  googleSignUp = async (googleReqUser: {
+    email: string;
+    nickname: string;
+    accessToken: string;
+    email_verified: boolean;
+  }): Promise<void> => {
+    const alreadyNickname = await this.authRepository.existNickname(
+      googleReqUser.nickname,
+    );
+
+    if (alreadyNickname) {
+      // 중복된 닉네임이 있을 때, 랜덤 형식의 닉네임을 생성하여 저장
+      googleReqUser['nickname'] = uniqueNamesGenerator({
+        dictionaries: [adjectives, animals],
+        length: 2,
+      });
+    }
+
+    // 계정 생성
+    await this.authRepository.googleUserCreate(googleReqUser);
+  };
+
+  // Google 로그인 요청
+  googleSignIn = async (googleReqUser: {
+    id: string;
+    email: string;
+    loginId: string | null;
+    name: string | null;
+    nickname: string;
+    gender: Gender | null;
+    birthDay: Date | null;
+    phoneNumber: string | null;
+    isPublic: State;
+    verify: State;
+  }): Promise<{ access_token: string; refresh_token: string }> => {
+    // 소셜 로그인 여부 확인
+    const accountType = await this.authRepository.getAccountType(
+      googleReqUser.id,
+    );
+
+    if (accountType.length === 0) {
+      throw new Forbidden('접근 권한이 없습니다. 문의 해주세요.');
+    }
+
+    if (
+      accountType.length > 0 &&
+      !accountType.toString().includes(Provider.GOOGLE)
+    ) {
+      throw new BadRequest(
+        '해당 계정은 소셜 계정입니다. 소셜 로그인을 이용해 주세요.',
+      );
+    }
+
+    const accessToken = await this.jwtService.sign(
+      {
+        id: googleReqUser.id as string,
+        email: googleReqUser.email,
+      },
+      JWT_ACCESS_SECRET_KEY,
+      TYPE.TokenType.ACCESS,
+    );
+    const refreshToken = await this.jwtService.sign(
+      {
+        id: googleReqUser.id as string,
+        email: googleReqUser.email,
+      },
+      JWT_REFRESH_SECRET_KEY,
+      TYPE.TokenType.REFRESH,
+    );
+
+    // access 토큰 설정
+    await this.redisService.setex(
+      `${TYPE.PrefixType.USERS}:${TYPE.TokenType.ACCESS}:id=${googleReqUser.id}`,
+      JWT_ACCESS_TTL,
+      accessToken,
+    );
+    // refresh 토큰 설정
+    await this.redisService.setex(
+      `${TYPE.PrefixType.USERS}:${TYPE.TokenType.REFRESH}:id=${googleReqUser.id}`,
+      JWT_REFRESH_TTL,
+      refreshToken,
+    );
+
+    return { access_token: accessToken, refresh_token: refreshToken };
   };
 }

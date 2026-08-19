@@ -7,3 +7,5 @@ export type { TUpdatePassowrdDto } from './updatePasswordDto';
 export { CertifiEmailDto } from './certifiEmaiDto';
 export { UpdatePasswordRequestDto } from './updatePasswordRequestDto';
 export type { TUpdatePasswordRequestDto } from './updatePasswordRequestDto';
+export { AuthEmailDto } from './authEmailDto';
+export type { TAuthEmailDto } from './authEmailDto';
