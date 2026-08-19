@@ -1,2 +1,10 @@
 export { RequestUserDto } from './requestUserDto';
 export type { TRequestUserDto } from './requestUserDto';
+export { RequestUsePostDto } from './requestUsePostDto';
+export type { TRequestUsePostDto } from './requestUsePostDto';
+export { RequestUseCommentDto } from './requestUseCommentDto';
+export type { TRequestUseCommentDto } from './requestUseCommentDto';
+export { UpdateUserDto } from './updateUserDto';
+export type { TUpdateUserDto } from './updateUserDto';
+export { UpdateProfileDto } from './updateProfileDto';
+export type { TUpdateProfileDto } from './updateProfileDto';
