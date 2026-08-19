@@ -2,22 +2,30 @@ import { BadRequest } from 'http-errors';
 import { Category, State } from '../../../generated/prisma/enums';
 
 export type TUpdatePostDto = {
-  title?: string | undefined;
-  context?: string | undefined;
-  image?: string | undefined;
-  isPublic?: State | undefined;
-  category?: Category | undefined;
+  title: string;
+  context?: string | null;
+  category: Category;
+  isPublic: State;
+  images?: string[] | string | undefined;
 };
 
 export async function UpdatePostDto({
   title,
   context,
-  image,
-  isPublic,
   category,
+  isPublic,
+  images,
 }: TUpdatePostDto): Promise<TUpdatePostDto> {
-  if (!title && !context && !image && !isPublic && !category) {
-    throw new BadRequest('업데이트 내용이 없습니다. 다시 시도해주세요.');
+  if (!title) {
+    throw new BadRequest('제목란을 작성해 주세요.');
+  }
+
+  if (!isPublic) {
+    throw new BadRequest('공개, 비공개란을 선택해 주세요.');
+  }
+
+  if (!category) {
+    throw new BadRequest('카테고리란을 선택해 주세요.');
   }
 
   if (title) {
@@ -45,10 +53,10 @@ export async function UpdatePostDto({
   }
 
   return {
-    title: title?.trim(),
-    context: context?.trim(),
-    image: image?.trim(),
-    isPublic: isPublic ?? undefined,
-    category: category ?? undefined,
+    title: title.trim(),
+    context: context?.trim() || null,
+    category: category,
+    isPublic: isPublic,
+    images: images,
   };
 }

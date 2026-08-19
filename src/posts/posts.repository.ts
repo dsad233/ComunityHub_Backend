@@ -1,7 +1,26 @@
-import { Category, PrismaClient, State } from '../../generated/prisma/client';
+import {
+  Category,
+  PrismaClient,
+  State,
+  Type,
+} from '../../generated/prisma/client';
 import { TPaginationDto } from '../common/dto/paginationDto';
-import { dateFormat } from '../common/utils';
+import {
+  categoryTranslate,
+  contextTranslate,
+  parseCreatedAt,
+} from '../common/utils';
 import { TCreatePostDto, TRequestPostDto, TUpdatePostDto } from './dto';
+import { PostsSchema as _PostsSchema } from '../../mongodb/schemas/posts.mongo';
+import { PostsSchema } from '../common/configs/mongodb.config';
+import { Types } from 'mongoose';
+import {
+  POST_COMMENT_WEIGHT,
+  POST_LIKE_WEIGHT,
+  POST_VIEW_WEIGHT,
+} from '../common/configs/keys';
+import { CategoryType } from '../common/libs/type';
+import { IsPublicStatus, OrderByStatus } from '../common/libs/status';
 
 export class PostsRepository {
   private prisma: PrismaClient;
@@ -11,61 +30,121 @@ export class PostsRepository {
 
   // 게시글 생성
   create = async (userId: string, dto: TCreatePostDto): Promise<void> => {
-    await this.prisma.post.create({
+    const now = new Date();
+    const post = await this.prisma.post.create({
       data: {
         title: dto.title,
         context: dto.context ?? null,
-        image: dto.image ?? null,
         isPublic: dto.isPublic,
         category: dto.category,
         userId: userId,
+        createdAt: now,
       },
     });
+
+    if (dto.images?.length) {
+      // 이미지를 하나씩 저장
+      for (let image of dto.images) {
+        await this.createImages(post.id, image);
+      }
+    }
+
+    new PostsSchema({
+      _id: post.id,
+      userId: userId,
+      createdAt: now,
+    }).save();
   };
 
-  // 게시글 ID 존재 유무 조회
-  findByPostId = async (
-    id: string,
-  ): Promise<{
-    id: string;
-    userId: string;
-  } | null> => {
-    return await this.prisma.post.findFirst({
+  // 유저 이미지 조회
+  getUserImage = async (userId: string): Promise<string | null> => {
+    const image = await this.prisma.image.findFirst({
       where: {
-        id: id,
-        deletedAt: 'FALSE',
+        typeId: userId,
       },
       select: {
-        id: true,
-        userId: true,
+        image: true,
       },
+    });
+
+    return image?.image
+      ? Buffer.from(image.image.buffer).toString('base64')
+      : null;
+  };
+
+  // 유저 이미지 목록들 조회
+  getUserImages = async (
+    userIds: string[],
+  ): Promise<
+    {
+      image: string;
+      typeId: string;
+    }[]
+  > => {
+    const images = await this.prisma.image.findMany({
+      where: {
+        typeId: {
+          in: userIds,
+        },
+      },
+      select: {
+        image: true,
+        typeId: true,
+      },
+    });
+
+    return images.map((image) => {
+      return {
+        image: Buffer.from(image.image.buffer).toString('base64'),
+        typeId: image.typeId,
+      };
     });
   };
 
   // 카테고리 목록 조회
-  findCategory = async (): Promise<Array<string>> => {
-    const categories: Array<string> = ['ALL'];
+  findCategory = async (): Promise<Array<Object>> => {
+    const categories: Array<Object> = [];
 
-    for (let prop in Category) {
-      categories.push(prop as Category);
+    for (let category of Object.entries(CategoryType)) {
+      categories.push({
+        key: category[0],
+        name: category[1],
+      });
     }
 
     return categories;
   };
 
   // 게시글 수 조회
-  countPosts = async (): Promise<number> => {
+  countPosts = async (category: string): Promise<number> => {
+    const where: any = {
+      isPublic: 'TRUE',
+      deletedAt: 'FALSE',
+    };
+
+    if (category === Category.FREE) {
+      where['category'] = Category.FREE;
+    } else if (category === Category.SPORTS) {
+      where['category'] = Category.SPORTS;
+    } else if (category === Category.GAME) {
+      where['category'] = Category.GAME;
+    }
+
     return await this.prisma.post.count({
-      where: {
-        isPublic: 'TRUE',
-        deletedAt: 'FALSE',
-      },
+      where,
     });
   };
 
   // 카테고리별 게시글 수 조회
-  countByCategoryPost = async () => {
-    return await this.prisma.post.groupBy({
+  countByCategoryPost = async (): Promise<
+    {
+      _count: {
+        _all: number;
+      };
+      category: Category;
+    }[]
+  > => {
+    const counts = await this.prisma.post.groupBy({
       where: {
         isPublic: 'TRUE',
         deletedAt: 'FALSE',
@@ -75,82 +154,297 @@ export class PostsRepository {
         _all: true,
       },
     });
+
+    return counts;
+  };
+
+  // 게시글 조회수 조회
+  findPostCount = async (id: string): Promise<number> => {
+    const post = await PostsSchema.findById(id);
+    return Number(post?.count) ?? 0;
+  };
+
+  // 조회수 높은 게시글 ID들 조회
+  topViewPosts = async (
+    paginations: TPaginationDto,
+  ): Promise<
+    {
+      _id: Types.UUID;
+    }[]
+  > => {
+    return await PostsSchema.find()
+      .select('_id')
+      .sort({ count: -1 })
+      .limit(Number(paginations.pages));
   };
 
   // 게시글 전체 조회
   find = async (
     paginations: TPaginationDto,
     query: TRequestPostDto,
+    postIds: string[] | null,
   ): Promise<
     {
       id: string;
       title: string;
       context: string | null;
-      category: string;
+      category: {
+        key: string;
+        name: string;
+      };
       createdAt: string;
       users: { nickname: string; image: string | null };
-      comments: number;
+      count: {
+        comments: number;
+        likes: number;
+        views: number;
+      };
     }[]
   > => {
     let where: any = { isPublic: 'TRUE', deletedAt: 'FALSE' };
 
+    // 게시글 제목, 내용, 작성자 검색
+    if (query.search) {
+      // 카테고리 조회로 인한 데이터 가공 처리
+      let categorySearch;
+
+      if (query.search === Category.FREE) {
+        categorySearch = Category.FREE;
+      } else if (query.search === Category.SPORTS) {
+        categorySearch = Category.SPORTS;
+      } else if (query.search === Category.GAME) {
+        categorySearch = Category.GAME;
+      }
+
+      where['OR'] = [
+        {
+          title: {
+            startsWith: query.search,
+          },
+        },
+        {
+          context: {
+            startsWith: query.search,
+          },
+        },
+        {
+          users: {
+            nickname: {
+              startsWith: query.search,
+            },
+          },
+        },
+        {
+          category: {
+            equals: categorySearch || undefined,
+          },
+        },
+      ];
+    }
+
+    // 카테고리 필터링
     if (query.category) {
-      where['category'] = query.category as Category;
-    } else if (query.isPublic === 'PUBLIC') {
-      where['isPublic'] = 'TRUE' as State;
+      where['category'] = query.category;
+    } else if (query.isPublic === IsPublicStatus.PUBLIC) {
+      where['isPublic'] = 'TRUE';
+    }
+    // 조회순으로 정렬
+    if (postIds?.length && query.orderBy === OrderByStatus.VIEWS) {
+      where['id'] = {
+        in: postIds as string[],
+      };
     }
 
     let orderBy: any = {};
 
-    if (query.orderby === 'NEW') {
-      orderBy['createdAt'] = 'asc';
-    } else if (query.orderby === 'COMMENTS') {
-      // orderBy['createdAt'] = 'asc';
-    } else if (query.orderby === 'VIEWS') {
-      // orderBy['createdAt'] = 'asc';
+    if (query.orderBy === OrderByStatus.NEW) {
+      orderBy['createdAt'] = 'desc';
+    } else if (query.orderBy === OrderByStatus.COMMENTS) {
+      orderBy['comments'] = {
+        _count: 'desc',
+      };
+      // 좋아요 기준으로 인기 게시글을 지정
+    } else if (query.orderBy === OrderByStatus.POPULAR) {
+      orderBy['likes'] = {
+        _count: 'desc',
+      };
     }
 
-    return (
-      await this.prisma.post.findMany({
-        where,
-        select: {
-          id: true,
-          title: true,
-          context: true,
-          category: true,
-          createdAt: true,
-          users: {
-            select: {
-              nickname: true,
-              image: true,
-            },
-          },
-          _count: {
-            select: {
-              comments: true,
-            },
+    const posts = await this.prisma.post.findMany({
+      where,
+      select: {
+        id: true,
+        title: true,
+        context: true,
+        category: true,
+        createdAt: true,
+        users: {
+          select: {
+            id: true,
+            nickname: true,
+            deletedAt: true,
           },
         },
-        orderBy,
-        skip: (Number(paginations.page) - 1) * Number(paginations.pages),
-        take: Number(paginations.pages),
-      })
-    ).map((post) => {
+        _count: {
+          select: {
+            comments: {
+              where: {
+                deletedAt: 'FALSE',
+              },
+            },
+            likes: true,
+          },
+        },
+      },
+      orderBy,
+      skip: (Number(paginations.page) - 1) * Number(paginations.pages),
+      take: Number(paginations.pages),
+    });
+
+    const userImages = await this.prisma.image.findMany({
+      where: {
+        typeId: {
+          in: posts.map((post) => post.users.id),
+        },
+      },
+      select: {
+        typeId: true,
+        image: true,
+      },
+    });
+
+    const postsSchema = await PostsSchema.find({
+      _id: { $in: posts.map((post) => post.id) },
+    }).select('_id count');
+
+    if (query.orderBy === OrderByStatus.POPULAR) {
+      return posts
+        .map((post) => {
+          // 인기 가중치 계산 값
+          const popularCount =
+            post?._count.likes * POST_LIKE_WEIGHT +
+            post?._count.comments * POST_COMMENT_WEIGHT +
+            (Number(
+              postsSchema.find((schema) => schema._id.toString() === post.id)
+                ?.count,
+            ) || 0 * POST_VIEW_WEIGHT);
+
+          const ifDeleteUser = post?.users.deletedAt !== State.TRUE;
+
+          const userImage = userImages.find(
+            (image) => image.typeId === post.users.id,
+          )?.image
+            ? Buffer.from(
+                userImages.find((image) => image.typeId === post.users.id)
+                  ?.image.buffer as ArrayBuffer,
+              ).toString('base64')
+            : null;
+          return {
+            id: post?.id,
+            title: post?.title,
+            context: contextTranslate(post?.context),
+            category: categoryTranslate(post?.category),
+            createdAt: parseCreatedAt(post?.createdAt, new Date()),
+            users: {
+              nickname: ifDeleteUser ? post?.users.nickname : '탈퇴 유저',
+              image: ifDeleteUser ? userImage : null,
+            },
+            count: {
+              comments: post?._count.comments ?? 0,
+              likes: post._count.likes ?? 0,
+              views:
+                Number(
+                  postsSchema.find((schema) => schema.id.toString() === post.id)
+                    ?.count,
+                ) || 0,
+            },
+            popularCount: popularCount,
+          };
+        })
+        .sort((post) => {
+          if (post.popularCount > 0) {
+            return 1;
+          } else if (post.popularCount < 0) {
+            return -1;
+          }
+
+          return 0;
+        })
+        .map((post) => {
+          return {
+            id: post?.id,
+            title: post?.title,
+            context: post?.context,
+            category: post?.category,
+            createdAt: post?.createdAt,
+            users: {
+              nickname: post?.users.nickname,
+              image: post?.users.image,
+            },
+            count: post?.count,
+          };
+        });
+    } else if (postIds?.length && query.orderBy === OrderByStatus.VIEWS) {
+      return posts.map((post) => {
+        const userImage = userImages.find(
+          (image) => image.typeId === post.users.id,
+        )?.image;
+        return {
+          id: post?.id,
+          title: post?.title,
+          context: contextTranslate(post?.context),
+          category: categoryTranslate(post?.category),
+          createdAt: parseCreatedAt(post?.createdAt, new Date()),
+          users: {
+            nickname: post?.users.nickname,
+            image: userImage
+              ? Buffer.from(
+                  userImages.find((image) => image.typeId === post.users.id)
+                    ?.image.buffer as ArrayBuffer,
+                ).toString('base64')
+              : null,
+          },
+          count: {
+            comments: post?._count.comments ?? 0,
+            likes: post._count.likes ?? 0,
+            views:
+              Number(
+                postsSchema.find((schema) => schema.id.toString() === post.id)
+                  ?.count,
+              ) || 0,
+          },
+        };
+      });
+    }
+
+    return posts.map((post) => {
+      const userImage = userImages.find(
+        (image) => image.typeId === post.users.id,
+      )?.image;
       return {
         id: post?.id,
         title: post?.title,
-        context: post?.context,
-        category: post?.category,
-        createdAt: dateFormat(
-          post?.createdAt.getFullYear(),
-          post?.createdAt.getMonth(),
-          post?.createdAt.getDate(),
-        ),
+        context: contextTranslate(post?.context),
+        category: categoryTranslate(post?.category),
+        createdAt: parseCreatedAt(post?.createdAt, new Date()),
         users: {
           nickname: post?.users.nickname,
-          image: post?.users.image,
+          image: userImage
+            ? Buffer.from(
+                userImages.find((image) => image.typeId === post.users.id)
+                  ?.image.buffer as ArrayBuffer,
+              ).toString('base64')
+            : null,
         },
-        comments: post?._count.comments ?? 0,
+        count: {
+          comments: post?._count.comments ?? 0,
+          likes: post._count.likes ?? 0,
+          views:
+            Number(
+              postsSchema.find((schema) => schema.id.toString() === post.id)
+                ?.count,
+            ) || 0,
+        },
       };
     });
   };
@@ -165,23 +459,48 @@ export class PostsRepository {
     category: Category;
     isPublic: State;
     createdAt: Date;
-    users: { nickname: string; image: string | null };
+    users: {
+      id: string;
+      nickname: string;
+      deletedAt: State;
+    };
+    _count: {
+      likes: number;
+      comments: number;
+    };
     comments: {
       id: string;
       context: string;
+      type: Type;
+      parentId: string | null;
       createdAt: Date;
       deletedAt: State;
-      users: { nickname: string; image: string | null };
+      users: {
+        id: string;
+        nickname: string;
+        deletedAt: State;
+      };
       replies: {
         id: string;
         context: string;
+        type: Type;
+        parentId: string | null;
         createdAt: Date;
-        users: { nickname: string; image: string | null };
+        deletedAt: State;
+        users: {
+          id: string;
+          nickname: string;
+          deletedAt: State;
+        };
       }[];
     }[];
   } | null> => {
     return await this.prisma.post.findFirst({
-      where: { id: id, isPublic: 'TRUE', deletedAt: 'FALSE' },
+      where: {
+        id: id,
+        isPublic: 'TRUE',
+        deletedAt: 'FALSE',
+      },
       select: {
         id: true,
         title: true,
@@ -191,8 +510,19 @@ export class PostsRepository {
         createdAt: true,
         users: {
           select: {
+            id: true,
             nickname: true,
-            image: true,
+            deletedAt: true,
+          },
+        },
+        _count: {
+          select: {
+            likes: true,
+            comments: {
+              where: {
+                deletedAt: 'FALSE',
+              },
+            },
           },
         },
         comments: {
@@ -202,12 +532,15 @@ export class PostsRepository {
           select: {
             id: true,
             context: true,
+            type: true,
+            parentId: true,
             createdAt: true,
             deletedAt: true,
             users: {
               select: {
+                id: true,
                 nickname: true,
-                image: true,
+                deletedAt: true,
               },
             },
             replies: {
@@ -217,11 +550,15 @@ export class PostsRepository {
               select: {
                 id: true,
                 context: true,
+                type: true,
+                parentId: true,
                 createdAt: true,
+                deletedAt: true,
                 users: {
                   select: {
+                    id: true,
                     nickname: true,
-                    image: true,
+                    deletedAt: true,
                   },
                 },
               },
@@ -238,6 +575,31 @@ export class PostsRepository {
     });
   };
 
+  // 게시글 기존 정보 조회
+  getExistingPostInfo = async (
+    id: string,
+    userId: string,
+  ): Promise<{
+    title: string;
+    category: Category;
+    context: string | null;
+    isPublic: State;
+  } | null> => {
+    return await this.prisma.post.findFirst({
+      where: {
+        id: id,
+        userId: userId,
+        deletedAt: 'FALSE',
+      },
+      select: {
+        title: true,
+        category: true,
+        context: true,
+        isPublic: true,
+      },
+    });
+  };
+
   // 게시글 수정
   update = async (
     id: string,
@@ -250,13 +612,23 @@ export class PostsRepository {
         userId: userId,
       },
       data: {
-        title: (body.title as string) ?? undefined,
-        context: (body.context as string) ?? undefined,
-        image: (body.image as string) ?? undefined,
-        isPublic: (body.isPublic as State) ?? undefined,
-        category: (body.category as Category) ?? undefined,
+        title: body.title,
+        context: body.context || null,
+        isPublic: body.isPublic,
+        category: body.category,
       },
     });
+  };
+
+  // 게시글 조회수 업데이트
+  updatePostCount = async (id: string): Promise<void> => {
+    const postSchema = await PostsSchema.findById(id);
+
+    if (postSchema) {
+      postSchema.count += 1n;
+
+      postSchema.save();
+    }
   };
 
   // 게시글 삭제 (소프트 삭제)
@@ -265,10 +637,76 @@ export class PostsRepository {
       where: {
         id: id,
         userId: userId,
+        deletedAt: 'FALSE',
       },
       data: {
-        isPublic: 'FALSE',
         deletedAt: 'TRUE',
+      },
+    });
+  };
+
+  /**
+   * 이미지 처리 관련 로직
+   */
+
+  // 게시글 이미지 조회
+  getImages = async (id: string): Promise<string[] | null> => {
+    const images = await this.prisma.image.findMany({
+      where: {
+        type: 'POST',
+        typeId: id,
+      },
+      select: {
+        image: true,
+      },
+    });
+
+    const result: string[] = [];
+
+    images.map((image) => {
+      const imageBufferStr = Buffer.from(image.image).toString('base64');
+      result.push(imageBufferStr);
+    });
+
+    return result.length > 0 ? result : null;
+  };
+
+  // 이미지 ID 목록 조회
+  getImageIds = async (id: string): Promise<string[] | []> => {
+    const imageIds = await this.prisma.image.findMany({
+      where: {
+        type: 'POST',
+        typeId: id,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    return imageIds.map((image) => image.id);
+  };
+
+  // 이미지 업데이트
+  createImages = async (id: string, image: string): Promise<void> => {
+    const imageBuffer = Buffer.from(image, 'base64');
+    await this.prisma.image.create({
+      data: {
+        type: 'POST',
+        typeId: id,
+        image: new Uint8Array(imageBuffer.buffer),
+      },
+    });
+  };
+
+  // 기존 이미지 제거
+  removeImages = async (id: string, imageIds: string[]): Promise<void> => {
+    await this.prisma.image.deleteMany({
+      where: {
+        id: {
+          in: imageIds,
+        },
+        type: 'POST',
+        typeId: id,
       },
     });
   };
