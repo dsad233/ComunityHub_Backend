@@ -122,7 +122,7 @@ export class MailerService {
                           <tr>
                             <td align="center" bgcolor="#111827" style="border-radius:14px;">
                               <a
-                                href="http://localhost:3000/auth/verify?email=${encodeURIComponent(email)}"
+                                href="http://localhost:5173/auth/email/verify?email=${encodeURIComponent(email)}"
                                 style="display:inline-block;padding:16px 28px;color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;"
                               >
                                 이메일 인증하기
