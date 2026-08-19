@@ -13,6 +13,7 @@ export class LikesRepository {
       data: {
         postId: id,
         userId: userId,
+        type: Type.POST,
       },
     });
   };
@@ -50,11 +51,7 @@ export class LikesRepository {
 
   // 좋아요 ID 조회
   findById = async (
-    params: {
-      id: string;
-      commentId: string;
-      replyId: string;
-    },
+    params: any,
     type: Type,
     userId: string,
   ): Promise<{ id: string } | null> => {

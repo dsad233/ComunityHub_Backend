@@ -4,8 +4,9 @@ import { prisma } from '../common/configs/prisma-client';
 import { LikesRepository } from './likes.repository';
 import { LikesService } from './likes.service';
 import { LikesController } from './likes.controller';
-import AuthMiddleware from '../common/middlewares/auth.middleware';
+
 import AsyncWrapper from '../common/middlewares/asyncWrapper';
+import AuthMiddleware from '../common/middlewares/auth.middleware';
 
 const router: express.Router = express.Router();
 
