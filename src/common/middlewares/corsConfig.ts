@@ -1,6 +1,6 @@
 import cors from 'cors';
 
-export default function Cors() {
+export function CorsConfig() {
   const corsOptions = {
     origin: ['http://localhost:5173'],
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],

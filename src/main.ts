@@ -8,14 +8,16 @@ import LikesRouter from './likes/likes.router';
 import CategoryRouter from './categories/categories.router';
 
 import ErrorMiddleware from './common/middlewares/errorMiddleware';
-import { MorganMiddleware } from './common/middlewares/morgan.middlewares';
-import Cors from './common/middlewares/cors';
+import { MorganConfig } from './common/middlewares/morganConfig';
+import { CorsConfig } from './common/middlewares/corsConfig';
 
 import { prisma } from './common/configs/prisma-client';
 import cookieParser from 'cookie-parser';
 import { MongoDBConfig } from './common/configs/mongodb.config';
 import passport from 'passport';
 import { GoogleStrategy } from './common/middlewares/googleStrategy';
+import { NODE_ENV } from './common/configs/keys';
+import helmet from 'helmet';
 
 const app: Express = express();
 const port: number = 3000;
@@ -24,13 +26,17 @@ const port: number = 3000;
 app.use(express.json({ limit: '50mb' }));
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
-app.use(Cors());
+app.use(CorsConfig());
+if (NODE_ENV === 'prod') {
+  app.use(helmet());
+}
 
+// MongoDB 설정
 MongoDBConfig();
 // passport 설정
 passport.use(GoogleStrategy());
 // morgan logger 설정
-app.use(MorganMiddleware());
+app.use(MorganConfig());
 
 app.use('/auth', AuthRouter);
 app.use('/users', UsersRouter);
