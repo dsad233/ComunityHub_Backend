@@ -48,10 +48,6 @@ export async function CreateUserDto({
     throw new BadRequest('패스워드 확인란을 입력해 주세요.');
   }
 
-  if (!name) {
-    throw new BadRequest('이름을 입력해 주세요.');
-  }
-
   if (!nickname) {
     throw new BadRequest('닉네임을 입력해 주세요.');
   }
@@ -73,10 +69,6 @@ export async function CreateUserDto({
 
   if (loginId.trim().length < 1 || loginId.trim().length > 13) {
     throw new BadRequest('ID는 2자 이상 13자 이하로 입력해 주세요.');
-  }
-
-  if (name.trim().length < 1 || name.trim().length > 50) {
-    throw new BadRequest('이름은 2자 이상 50자 이하로 입력해 주세요.');
   }
 
   if (!password.trim().match(regEx.password)) {
