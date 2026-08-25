@@ -67,4 +67,22 @@ router.get(
   AsyncWrapper(authController.googleCallback),
 );
 
+// 구글 계정 연동 시도
+router.get(
+  '/link/social/google',
+  AuthMiddleware,
+  AsyncWrapper(authController.googleSocialLink),
+);
+// 구글 계정 연동 콜백
+router.get(
+  '/link/oauth2/callback/google',
+  AsyncWrapper(authController.googleSocialLinkCallback),
+);
+// 구글 계정 등록 처리
+router.post(
+  '/register/oauth2/google',
+  AuthMiddleware,
+  AsyncWrapper(authController.googleSocialLinkRegister),
+);
+
 export default router;

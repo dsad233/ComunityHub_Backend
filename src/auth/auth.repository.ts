@@ -8,20 +8,32 @@ export class AuthRepository {
   constructor(prisma: PrismaClient) {
     this.prisma = prisma;
   }
+  // 계정 유형 데이터 존재 유무 조회
+  getAccountTypeUserId = async (
+    email: string,
+  ): Promise<{ userId: string } | null> => {
+    return await this.prisma.account_type.findFirst({
+      where: {
+        email: email,
+      },
+      select: {
+        userId: true,
+      },
+    });
+  };
 
-  // 계정 유형 조회
-  getAccountType = async (id: string): Promise<Provider[]> => {
-    const accountTypes = await this.prisma.account_type.findMany({
+  // 계정 타입 정보 조회
+  getAccountTypes = async (
+    id: string,
+  ): Promise<{ email: string; provider: Provider }[]> => {
+    return await this.prisma.account_type.findMany({
       where: {
         userId: id,
       },
       select: {
+        email: true,
         provider: true,
       },
-    });
-
-    return accountTypes.map((provider) => {
-      return provider.provider;
     });
   };
 
@@ -80,7 +92,10 @@ export class AuthRepository {
           create: {},
         },
         account_types: {
-          create: {},
+          create: {
+            email: dto.email,
+            provider: 'GENERAL',
+          },
         },
       },
     });
@@ -107,6 +122,7 @@ export class AuthRepository {
         },
         account_types: {
           create: {
+            email: email,
             provider: Provider.GOOGLE,
           },
         },
@@ -227,6 +243,21 @@ export class AuthRepository {
       },
       data: {
         password: await hashPassword(newPassword),
+      },
+    });
+  };
+
+  /**
+   * OAuth 2.0 Google 로그인
+   */
+
+  // 구글 연동 세션 정보 생성
+  googleSocialLink = async (id: string, email: string): Promise<void> => {
+    await this.prisma.account_type.create({
+      data: {
+        email: email,
+        provider: 'GOOGLE',
+        userId: id,
       },
     });
   };

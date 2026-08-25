@@ -13,6 +13,7 @@ import {
 import {
   GOOGLE_CALLBACK_LOGIN_URL,
   GOOGLE_CALLBACK_SUCCESS_URL,
+  GOOGLE_LINK_SUCCESS_URL,
 } from '../common/configs/keys';
 
 export class AuthController {
@@ -197,5 +198,42 @@ export class AuthController {
     );
 
     return;
+  };
+
+  // 구글 계정 연동 요청
+  googleSocialLink = (
+    req: Request,
+    res: Response,
+  ): Response<{ data: string }> => {
+    return res.status(StatusCodes.OK).json({
+      url: this.authService.googleSocialLink(),
+    });
+  };
+
+  // 구글 계정 연동 콜백
+  googleSocialLinkCallback = async (
+    req: Request,
+    res: Response,
+  ): Promise<void> => {
+    const email = await this.authService.googleSocialLinkCallback(
+      req.query.code as string,
+    );
+    res.redirect(GOOGLE_LINK_SUCCESS_URL + `?email=${email}`);
+    return;
+  };
+
+  // 구글 계정 등록 처리
+  googleSocialLinkRegister = async (
+    req: Request,
+    res: Response,
+  ): Promise<Response<{ message: string }>> => {
+    await this.authService.googleSocialLinkRegister(
+      req.user.id,
+      req.body.email,
+    );
+
+    return res.status(StatusCodes.OK).json({
+      message: '구글 계정 연동 완료.',
+    });
   };
 }

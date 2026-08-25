@@ -16,6 +16,9 @@ import {
 } from './dto';
 import { JwtService } from '../jwt/jwt.service';
 import {
+  GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET_KEY,
+  GOOGLE_LINK_CALLBACK_URL,
   JWT_ACCESS_SECRET_KEY,
   JWT_ACCESS_TTL,
   JWT_REFRESH_SECRET_KEY,
@@ -30,6 +33,7 @@ import {
   animals,
   uniqueNamesGenerator,
 } from 'unique-names-generator';
+import { google } from 'googleapis';
 
 export class AuthService {
   private readonly authRepository: AuthRepository;
@@ -147,19 +151,23 @@ export class AuthService {
       }
 
       // 소셜 로그인 여부 확인
-      const accountType = await this.authRepository.getAccountType(user.id);
+      const accountTypes = await this.authRepository.getAccountTypes(user.id);
 
-      if (accountType.length === 0) {
+      // 계정 유형
+      const providers = accountTypes.map((account) => account.provider);
+
+      if (providers.length === 0) {
         throw new Forbidden('접근 권한이 없습니다. 문의 해주세요.');
       }
 
-      if (
-        accountType.length > 0 &&
-        !accountType.toString().includes(Provider.GENERAL)
-      ) {
+      if (providers.length > 0 && !providers.includes(Provider.GENERAL)) {
         throw new BadRequest(
           '해당 계정은 소셜 계정입니다. 소셜 로그인을 이용해 주세요.',
         );
+      }
+
+      if (!accountTypes.some((account) => account.email === dto.loginId)) {
+        throw new NotFound('계정이 존재하지 않습니다. 다시 시도해 주세요.');
       }
 
       if (!(await comparePassword(dto.password, user.password))) {
@@ -480,36 +488,56 @@ export class AuthService {
     isPublic: State;
     verify: State;
   }): Promise<{ access_token: string; refresh_token: string }> => {
-    // 소셜 로그인 여부 확인
-    const accountType = await this.authRepository.getAccountType(
+    // 계정 타입 정보 조회
+    const accountTypes = await this.authRepository.getAccountTypes(
       googleReqUser.id,
     );
 
-    if (accountType.length === 0) {
+    // 계정 유형
+    const providers = accountTypes.map((account) => account.provider);
+
+    if (providers.length === 0) {
       throw new Forbidden('접근 권한이 없습니다. 문의 해주세요.');
     }
 
-    if (
-      accountType.length > 0 &&
-      !accountType.toString().includes(Provider.GOOGLE)
-    ) {
+    if (providers.length > 0 && !providers.includes(Provider.GOOGLE)) {
       throw new BadRequest(
-        '해당 계정은 소셜 계정입니다. 소셜 로그인을 이용해 주세요.',
+        '해당 계정은 일반 계정입니다. 일반 로그인을 이용해 주세요.',
       );
+    }
+
+    if (
+      !accountTypes.some((account) => account.email === googleReqUser.email)
+    ) {
+      throw new NotFound('계정이 존재하지 않습니다. 다시 시도해 주세요.');
+    }
+
+    // 기존 일반 계정의 이메일이 없다면, 현재 로그인을 시도한 이메일로 지정
+    const userEmail =
+      accountTypes.filter(
+        (account) =>
+          account.email !== googleReqUser.email &&
+          account.provider === 'GENERAL',
+      )[0]?.email || googleReqUser.email;
+
+    const user = await this.authRepository.emailSigIn(userEmail);
+
+    if (!user) {
+      throw new NotFound('존재하지 않는 유저 입니다.');
     }
 
     const accessToken = await this.jwtService.sign(
       {
-        id: googleReqUser.id as string,
-        email: googleReqUser.email,
+        id: user.id as string,
+        email: user.email,
       },
       JWT_ACCESS_SECRET_KEY,
       TYPE.TokenType.ACCESS,
     );
     const refreshToken = await this.jwtService.sign(
       {
-        id: googleReqUser.id as string,
-        email: googleReqUser.email,
+        id: user.id as string,
+        email: user.email,
       },
       JWT_REFRESH_SECRET_KEY,
       TYPE.TokenType.REFRESH,
@@ -517,17 +545,94 @@ export class AuthService {
 
     // access 토큰 설정
     await this.redisService.setex(
-      `${TYPE.PrefixType.USERS}:${TYPE.TokenType.ACCESS}:id=${googleReqUser.id}`,
+      `${TYPE.PrefixType.USERS}:${TYPE.TokenType.ACCESS}:id=${user.id}`,
       JWT_ACCESS_TTL,
       accessToken,
     );
     // refresh 토큰 설정
     await this.redisService.setex(
-      `${TYPE.PrefixType.USERS}:${TYPE.TokenType.REFRESH}:id=${googleReqUser.id}`,
+      `${TYPE.PrefixType.USERS}:${TYPE.TokenType.REFRESH}:id=${user.id}`,
       JWT_REFRESH_TTL,
       refreshToken,
     );
 
     return { access_token: accessToken, refresh_token: refreshToken };
+  };
+
+  /**
+   * OAuth 2.0 Google 로그인
+   */
+
+  // 구글 계정 연동 요청
+  googleSocialLink = (): string => {
+    const oauth2Client = new google.auth.OAuth2(
+      GOOGLE_CLIENT_ID,
+      GOOGLE_CLIENT_SECRET_KEY,
+      GOOGLE_LINK_CALLBACK_URL,
+    );
+
+    return oauth2Client.generateAuthUrl({
+      access_type: 'offline',
+      scope: ['email', 'profile'],
+    });
+  };
+
+  // 구글 계정 연동 콜백
+  googleSocialLinkCallback = async (code: string): Promise<string> => {
+    if (!code) {
+      throw new NotFound('올바르지 않은 코드 입니다. 다시 시도해 주세요.');
+    }
+
+    const oauth2Client = new google.auth.OAuth2(
+      GOOGLE_CLIENT_ID,
+      GOOGLE_CLIENT_SECRET_KEY,
+      GOOGLE_LINK_CALLBACK_URL,
+    );
+
+    // 구글 토큰 조회
+    const { tokens } = await oauth2Client.getToken(code);
+    // 발급 받은 토큰으로 자격 인증
+    oauth2Client.setCredentials(tokens);
+
+    const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
+    const userInfo = await oauth2.userinfo.get();
+
+    if (!userInfo) {
+      throw new NotFound('올바르지 않은 유저 정보 입니다. 다시 시도해 주세요.');
+    }
+
+    return userInfo.data.email as string;
+  };
+
+  // 구글 계정 등록 처리
+  googleSocialLinkRegister = async (
+    id: string,
+    email: string,
+  ): Promise<void> => {
+    // 계정 연동 유무 조회
+    const linkSocial = await this.authRepository.getAccountTypeUserId(email);
+
+    if (linkSocial) {
+      throw new Conflict('이미 연동된 계정입니다. 다시 시도해 주세요.');
+    }
+
+    // 계정 유형 정보 조회
+    const accountTypes = await this.authRepository.getAccountTypes(id);
+
+    // 계정 유형
+    const providers = accountTypes.map((account) => account.provider);
+
+    if (providers.length === 0) {
+      throw new Forbidden('접근 권한이 없습니다. 문의 해주세요.');
+    }
+
+    if (providers.length > 0 && !providers.includes(Provider.GENERAL)) {
+      throw new BadRequest(
+        '해당 계정은 소셜 계정입니다. 소셜 로그인을 이용해 주세요.',
+      );
+    }
+
+    // 구글 연동 세션 정보 생성
+    await this.authRepository.googleSocialLink(id, email);
   };
 }

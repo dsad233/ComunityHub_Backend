@@ -78,9 +78,9 @@ export function GoogleStrategy(): Strategy {
         email_verified: boolean;
       };
 
-      const alreadyEmail = await existEmail(session.email);
-      if (alreadyEmail) {
-        const user = await getUser(session);
+      const alreadyUserId = await getAccountTypeUserId(session.email);
+      if (alreadyUserId) {
+        const user = await getUser(alreadyUserId.userId);
 
         if (user) {
           return cb(null, user);
@@ -93,12 +93,7 @@ export function GoogleStrategy(): Strategy {
 }
 
 // 유저 정보 반환
-async function getUser(payload: {
-  email: string;
-  nickname: string;
-  accessToken: string;
-  email_verified: boolean;
-}): Promise<{
+async function getUser(userId: string): Promise<{
   id: string;
   email: string;
   loginId: string | null;
@@ -112,8 +107,7 @@ async function getUser(payload: {
 } | null> {
   const user = await prisma.user.findFirst({
     where: {
-      email: payload.email,
-      nickname: payload.nickname,
+      id: userId,
       deletedAt: 'FALSE',
     },
     select: {
@@ -133,10 +127,16 @@ async function getUser(payload: {
   return user;
 }
 
-// 중복 이메일 유무 체크
-async function existEmail(email: string): Promise<{ email: string } | null> {
-  return await prisma.user.findFirst({
-    where: { email: email },
-    select: { email: true },
+// 계정 연동 유무 조회
+async function getAccountTypeUserId(
+  email: string,
+): Promise<{ userId: string } | null> {
+  return await prisma.account_type.findFirst({
+    where: {
+      email: email,
+    },
+    select: {
+      userId: true,
+    },
   });
 }
