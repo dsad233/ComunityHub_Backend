@@ -86,6 +86,14 @@ export const GOOGLE_CALLBACK_LOGIN_URL = String(
   process.env.GOOGLE_CALLBACK_LOGIN_URL,
 );
 
+// 구글 계정 연동 콜백링크
+export const GOOGLE_LINK_CALLBACK_URL = String(
+  process.env.GOOGLE_LINK_CALLBACK_URL,
+);
+export const GOOGLE_LINK_SUCCESS_URL = String(
+  process.env.GOOGLE_LINK_SUCCESS_URL,
+);
+
 /**
  * 인기도 계산 가중치
  */

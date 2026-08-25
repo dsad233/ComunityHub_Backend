@@ -11,11 +11,11 @@ export async function RequestCommentUpdateDto({
   commentId,
 }: TRequestCommentUpdateDto): Promise<TRequestCommentUpdateDto> {
   if (!id) {
-    throw new BadRequest('게시글 ID가 존재하지 않습니다. 다시 시도 해주세요.');
+    throw new BadRequest('게시글 ID가 존재하지 않습니다. 다시 시도해 주세요.');
   }
 
   if (!commentId) {
-    throw new BadRequest('댓글 ID가 존재하지 않습니다. 다시 시도 해주세요.');
+    throw new BadRequest('댓글 ID가 존재하지 않습니다. 다시 시도해 주세요.');
   }
 
   if (!id.trim().match(regEx.uuidv4)) {

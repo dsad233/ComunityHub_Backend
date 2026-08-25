@@ -97,7 +97,7 @@ async function getUser(payload: {
   email: string;
   nickname: string;
   accessToken: string;
-  email_verified: Boolean;
+  email_verified: boolean;
 }): Promise<{
   id: string;
   email: string;
