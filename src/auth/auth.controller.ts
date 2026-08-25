@@ -26,10 +26,31 @@ export class AuthController {
   checkLoginId = async (
     req: Request,
     res: Response,
-  ): Promise<Response<{ message: string }>> => {
+  ): Promise<Response<{ message: string; data: boolean }>> => {
     return res.status(StatusCodes.OK).json({
-      message: '로그인 아이디 유무 확인 완료.',
-      data: await this.authService.checkLoginId(req.query.loginId as string),
+      verify: await this.authService.checkLoginId(req.query.loginId as string),
+    });
+  };
+
+  // 이메일 유무 확인
+  checkEmail = async (
+    req: Request,
+    res: Response,
+  ): Promise<Response<{ message: string; data: boolean }>> => {
+    return res.status(StatusCodes.OK).json({
+      verify: await this.authService.checkEmail(req.query.email as string),
+    });
+  };
+
+  // 닉네임 유무 확인
+  checkNickname = async (
+    req: Request,
+    res: Response,
+  ): Promise<Response<{ message: string; data: boolean }>> => {
+    return res.status(StatusCodes.OK).json({
+      verify: await this.authService.checkNickname(
+        req.query.nickname as string,
+      ),
     });
   };
 
