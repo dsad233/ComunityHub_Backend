@@ -14,8 +14,8 @@ import {
 } from './dto';
 import {
   Authority,
-  Category,
   Gender,
+  Provider,
   State,
   Type,
 } from '../../generated/prisma/enums';
@@ -43,6 +43,7 @@ export class UsersController {
         isPublic: State;
         createdAt: string;
         roles: { authority: Authority } | null;
+        provider: Provider[];
         posts: Array<{
           id: string;
           title: string;

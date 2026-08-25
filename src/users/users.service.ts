@@ -4,6 +4,7 @@ import {
   Authority,
   Category,
   Gender,
+  Provider,
   State,
   Type,
 } from '../../generated/prisma/enums';
@@ -38,6 +39,7 @@ export class UsersService {
     isPublic: State;
     createdAt: string;
     roles: { authority: Authority } | null;
+    provider: Provider[];
     posts: Array<{
       id: string;
       title: string;
@@ -83,6 +85,7 @@ export class UsersService {
       isPublic: user.isPublic,
       createdAt: dateFormat(user.createdAt),
       roles: user.roles,
+      provider: await this.usersRepository.getAccountType(id),
       posts: user.posts.map((post) => {
         return {
           id: post?.id,

@@ -3,6 +3,7 @@ import {
   Category,
   Gender,
   PrismaClient,
+  Provider,
   State,
   Type,
 } from '../../generated/prisma/client';
@@ -35,6 +36,22 @@ export class UsersRepository {
   constructor(prisma: PrismaClient) {
     this.prisma = prisma;
   }
+
+  // 계정 유형 조회
+  getAccountType = async (id: string): Promise<Provider[]> => {
+    const accountTypes = await this.prisma.account_type.findMany({
+      where: {
+        userId: id,
+      },
+      select: {
+        provider: true,
+      },
+    });
+
+    return accountTypes.map((provider) => {
+      return provider.provider;
+    });
+  };
 
   // 유저 마이페이지 조회
   userInfo = async (
