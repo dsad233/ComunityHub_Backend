@@ -25,7 +25,11 @@ const authService = new AuthService(
 const authController = new AuthController(authService);
 
 // 로그인 아이디 유무 확인
-router.get('/check/id', AsyncWrapper(authController.checkLoginId));
+router.get('/check/loginid', AsyncWrapper(authController.checkLoginId));
+// 이메일 유무 확인
+router.get('/check/email', AsyncWrapper(authController.checkEmail));
+// 닉네임 유무 확인
+router.get('/check/nickname', AsyncWrapper(authController.checkNickname));
 // 회원가입
 router.post('/signup', AsyncWrapper(authController.signUp));
 // 유저 이메일 인증 여부 업데이트

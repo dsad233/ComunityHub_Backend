@@ -49,10 +49,36 @@ export class AuthService {
   }
 
   // 로그인 아이디 유무 확인
-  checkLoginId = async (
-    loginId: string,
-  ): Promise<{ loginId: string | null } | null> => {
-    return await this.authRepository.existLoginId(loginId);
+  checkLoginId = async (loginId: string): Promise<boolean> => {
+    const alreadyUserId = await this.authRepository.existLoginId(loginId);
+
+    if (alreadyUserId) {
+      return false;
+    }
+
+    return true;
+  };
+
+  // 이메일 유무 확인
+  checkEmail = async (email: string): Promise<boolean> => {
+    const alreadyEmail = await this.authRepository.existEmail(email);
+
+    if (alreadyEmail) {
+      return false;
+    }
+
+    return true;
+  };
+
+  // 닉네임 유무 확인
+  checkNickname = async (email: string): Promise<boolean> => {
+    const alreadyNickname = await this.authRepository.existNickname(email);
+
+    if (alreadyNickname) {
+      return false;
+    }
+
+    return true;
   };
 
   // 유저 생성
