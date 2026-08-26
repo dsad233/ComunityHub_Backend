@@ -1,5 +1,6 @@
 model Account_type {
     id   String  @id @default(uuid())
+    email String @db.VarChar(254)
     provider Provider @default(GENERAL)
     
     createdAt DateTime @default(now()) @map("created_at")

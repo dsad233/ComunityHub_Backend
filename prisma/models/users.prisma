@@ -1,6 +1,6 @@
 model User {
   id    String  @id @default(uuid()) 
-  email String @unique @db.VarChar(254)
+  email String @db.VarChar(254)
   loginId String? @unique @db.VarChar(13) @map("login_id")
   password String
   name  String? @db.VarChar(50)
