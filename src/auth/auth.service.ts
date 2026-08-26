@@ -476,7 +476,7 @@ export class AuthService {
       // 중복된 닉네임이 있을 때, 랜덤 형식의 닉네임을 생성하여 저장
       googleReqUser['nickname'] = uniqueNamesGenerator({
         dictionaries: [adjectives, animals],
-        length: 2,
+        length: Math.floor(Math.random() * 2 + 1),
       });
     }
 
@@ -572,7 +572,7 @@ export class AuthService {
    * OAuth 2.0 Google 로그인
    */
 
-  // 구글 계정 연동 요청
+  // 구글 계정 연동 URL 요청
   googleSocialLink = (): string => {
     const oauth2Client = new google.auth.OAuth2(
       GOOGLE_CLIENT_ID,
@@ -619,9 +619,10 @@ export class AuthService {
     email: string,
   ): Promise<void> => {
     // 계정 연동 유무 조회
-    const linkSocial = await this.authRepository.getAccountTypeUserId(email);
+    const alreadyAccount =
+      await this.authRepository.getAccountTypeUserId(email);
 
-    if (linkSocial) {
+    if (alreadyAccount) {
       throw new Conflict('이미 연동된 계정입니다. 다시 시도해 주세요.');
     }
 

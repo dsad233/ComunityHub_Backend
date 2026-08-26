@@ -67,7 +67,7 @@ router.get(
   AsyncWrapper(authController.googleCallback),
 );
 
-// 구글 계정 연동 시도
+// 구글 계정 연동 URL 요청
 router.get(
   '/link/social/google',
   AuthMiddleware,

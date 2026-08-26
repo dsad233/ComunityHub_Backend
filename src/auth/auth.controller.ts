@@ -200,7 +200,7 @@ export class AuthController {
     return;
   };
 
-  // 구글 계정 연동 요청
+  // 구글 계정 연동 URL 요청
   googleSocialLink = (
     req: Request,
     res: Response,
