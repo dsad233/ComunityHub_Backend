@@ -135,7 +135,7 @@ export class AuthService {
       throw new BadRequest('이미 이메일 인증이 완료된 유저 입니다.');
     }
 
-    await this.authRepository.updateVerify(email);
+    await this.authRepository.updateVerify(user.id, email);
   };
 
   // 로그인
@@ -166,7 +166,12 @@ export class AuthService {
         );
       }
 
-      if (!accountTypes.some((account) => account.email === dto.loginId)) {
+      if (
+        !accountTypes.some(
+          (account) =>
+            account.email === dto.loginId && account.provider === 'GENERAL',
+        )
+      ) {
         throw new NotFound('계정이 존재하지 않습니다. 다시 시도해 주세요.');
       }
 
@@ -393,7 +398,11 @@ export class AuthService {
       );
     }
 
-    await this.authRepository.updatePassword(query.email, updatePassword);
+    await this.authRepository.updatePassword(
+      user.id,
+      query.email,
+      updatePassword,
+    );
   };
 
   // 패스워드 변경 이메일 인증

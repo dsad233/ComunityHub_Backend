@@ -15,6 +15,7 @@ export class AuthRepository {
     return await this.prisma.account_type.findFirst({
       where: {
         email: email,
+        provider: 'GOOGLE',
       },
       select: {
         userId: true,
@@ -131,13 +132,16 @@ export class AuthRepository {
   };
 
   // 유저 이메일 인증 유무 조회
-  verifyEmail = async (email: string): Promise<{ verify: State } | null> => {
+  verifyEmail = async (
+    email: string,
+  ): Promise<{ id: string; verify: State } | null> => {
     return await this.prisma.user.findFirst({
       where: {
         email: email,
         deletedAt: 'FALSE',
       },
       select: {
+        id: true,
         verify: true,
       },
     });
@@ -219,9 +223,10 @@ export class AuthRepository {
   };
 
   // 이메일 인증 완료 여부 업데이트
-  updateVerify = async (email: string): Promise<void> => {
+  updateVerify = async (id: string, email: string): Promise<void> => {
     await this.prisma.user.update({
       where: {
+        id: id,
         email: email,
         deletedAt: 'FALSE',
       },
@@ -233,11 +238,13 @@ export class AuthRepository {
 
   // 패스워드 변경
   updatePassword = async (
+    id: string,
     email: string,
     newPassword: string,
   ): Promise<void> => {
     await this.prisma.user.update({
       where: {
+        id: id,
         email: email,
         deletedAt: 'FALSE',
       },
