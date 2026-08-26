@@ -78,6 +78,7 @@ export function GoogleStrategy(): Strategy {
         email_verified: boolean;
       };
 
+      // 계정 이메일과 계정 유형이 동일한 데이터가 있다면 기존 계정의 userId를 리턴
       const alreadyUserId = await getAccountTypeUserId(session.email);
       if (alreadyUserId) {
         const user = await getUser(alreadyUserId.userId);
@@ -127,13 +128,14 @@ async function getUser(userId: string): Promise<{
   return user;
 }
 
-// 계정 연동 유무 조회
+// 소셜 계정 연동 유무 조회
 async function getAccountTypeUserId(
   email: string,
 ): Promise<{ userId: string } | null> {
   return await prisma.account_type.findFirst({
     where: {
       email: email,
+      provider: 'GOOGLE',
     },
     select: {
       userId: true,

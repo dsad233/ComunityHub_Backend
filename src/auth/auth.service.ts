@@ -468,6 +468,14 @@ export class AuthService {
     accessToken: string;
     email_verified: boolean;
   }): Promise<void> => {
+    const alreadyAccount = await this.authRepository.getAccountTypeUserId(
+      googleReqUser.email,
+    );
+
+    if (alreadyAccount) {
+      throw new Conflict('이미 연동된 계정입니다. 다시 시도해 주세요.');
+    }
+
     const alreadyNickname = await this.authRepository.existNickname(
       googleReqUser.nickname,
     );
@@ -515,21 +523,7 @@ export class AuthService {
       );
     }
 
-    if (
-      !accountTypes.some((account) => account.email === googleReqUser.email)
-    ) {
-      throw new NotFound('계정이 존재하지 않습니다. 다시 시도해 주세요.');
-    }
-
-    // 기존 일반 계정의 이메일이 없다면, 현재 로그인을 시도한 이메일로 지정
-    const userEmail =
-      accountTypes.filter(
-        (account) =>
-          account.email !== googleReqUser.email &&
-          account.provider === 'GENERAL',
-      )[0]?.email || googleReqUser.email;
-
-    const user = await this.authRepository.emailSigIn(userEmail);
+    const user = await this.authRepository.emailSigIn(googleReqUser.email);
 
     if (!user) {
       throw new NotFound('존재하지 않는 유저 입니다.');
