@@ -3,7 +3,7 @@ import { Gender, State } from '../../../generated/prisma/enums';
 import { regEx } from '../../common/utils';
 
 export type TUpdateUserDto = {
-  name: string;
+  name?: string | null;
   nickname: string;
   gender?: Gender | null;
   birthDay?: Date | null;
@@ -75,7 +75,7 @@ export async function UpdateUserDto({
   }
 
   return {
-    name: name.trim(),
+    name: name?.trim() || null,
     nickname: nickname.trim(),
     gender: gender || null,
     birthDay: (birthDay && new Date(birthDay)) || null,
