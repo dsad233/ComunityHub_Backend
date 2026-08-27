@@ -16,11 +16,11 @@ import cookieParser from 'cookie-parser';
 import { MongoDBConfig } from './common/configs/mongodb.config';
 import passport from 'passport';
 import { GoogleStrategy } from './common/middlewares/googleStrategy';
-import { NODE_ENV } from './common/configs/keys';
+import { NODE_ENV, RUNNING_PORT } from './common/configs/keys';
 import helmet from 'helmet';
 
 const app: Express = express();
-const port: number = 3000;
+const port: number = RUNNING_PORT;
 
 // req.body 수용 용량을 기존 100kb에서 50mb 수용으로 변경
 app.use(express.json({ limit: '50mb' }));

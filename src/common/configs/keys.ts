@@ -1,6 +1,7 @@
 import 'dotenv/config';
 
 export const NODE_ENV = String(process.env.NODE_ENV) || 'local';
+export const RUNNING_PORT = Number(process.env.RUNNING_PORT) || 3000;
 export const TIMEZONE = String(process.env.TIMEZONE) || 'Asia/Seoul';
 export const DB_HOST = String(process.env.DB_HOST) || 'localhost';
 export const DB_USER = String(process.env.DB_USER);
