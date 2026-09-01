@@ -21,13 +21,18 @@ const adapter = new PrismaMariaDb({
   user: DB_USER,
   password: DB_PASS,
   database: DB_NAME,
-  timezone: TIMEZONE,
+  // timezone: TIMEZONE,
   connectionLimit: DB_CONNECTON_LIMIT,
   acquireTimeout: DB_POOL_TIMEOUT,
   connectTimeout: DB_CONNECT_TIMEOUT,
   idleTimeout: DB_IDLE_TIMEOUT,
   allowPublicKeyRetrieval: DB_PUBLICKEYRETRIEVAL,
   ssl: DB_USESSL,
+  logger: {
+    error: (error) => {
+      console.error('PrismaAdapterError', error);
+    },
+  },
 });
 
 export const prisma = new PrismaClient({
