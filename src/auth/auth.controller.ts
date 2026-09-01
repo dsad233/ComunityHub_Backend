@@ -11,10 +11,12 @@ import {
   AuthEmailDto,
 } from './dto';
 import {
-  GOOGLE_CALLBACK_LOGIN_URL,
-  GOOGLE_CALLBACK_SUCCESS_URL,
-  GOOGLE_LINK_SUCCESS_URL,
+  GOOGLE_LINK_SUCCESS_REDIRECT_URL,
+  GOOGLE_LOGIN_SUCCESS_REDIRECT_URL,
+  GOOGLE_SIGNUP_FAIL_REDIRECT_URL,
+  GOOGLE_SIGNUP_SUCCESS_REDIRECT_URL,
 } from '../common/configs/keys';
+import { State } from '../../generated/prisma/enums';
 
 export class AuthController {
   private readonly authService: AuthService;
@@ -175,11 +177,19 @@ export class AuthController {
     // 이미 회원 가입 이력이 있을 시에, 로그인 처리
     if (req.user.id) {
       const tokens = await this.authService.googleSignIn(req.user);
-      res.writeHead(StatusCodes.OK, {
-        'Content-Type': 'text/html; charset=utf-8',
-      });
-      res.write(
-        `<script>window.location.href="${GOOGLE_CALLBACK_SUCCESS_URL}?res_ack=${tokens.access_token}&res_ref=${tokens.refresh_token}"</script>`,
+      res.redirect(
+        GOOGLE_LOGIN_SUCCESS_REDIRECT_URL +
+          `?res_ack=${tokens.access_token}&res_ref=${tokens.refresh_token}`,
+      );
+
+      return;
+    }
+
+    // 회원 탈퇴한 세션 일때
+    if (req.user?.deletedAt === State.TRUE) {
+      res.redirect(
+        GOOGLE_SIGNUP_FAIL_REDIRECT_URL +
+          `?message=${'회원 탈퇴한 계정 입니다. 문의 해주세요.'}`,
       );
 
       return;
@@ -187,14 +197,8 @@ export class AuthController {
 
     // 구글 계정으로 회원 가입 진행 처리
     await this.authService.googleSignUp(req.user);
-    res.writeHead(StatusCodes.OK, {
-      'Content-Type': 'text/html; charset=utf-8',
-    });
-    res.write(
-      "<script>alert('회원가입이 완료되었습니다. 다시 로그인을 시도해 주세요.')</script>",
-    );
-    res.write(
-      `<script>window.location.href="${GOOGLE_CALLBACK_LOGIN_URL}"</script>`,
+    res.redirect(
+      GOOGLE_SIGNUP_SUCCESS_REDIRECT_URL + `?email=${req.user.email}`,
     );
 
     return;
@@ -218,7 +222,8 @@ export class AuthController {
     const email = await this.authService.googleSocialLinkCallback(
       req.query.code as string,
     );
-    res.redirect(GOOGLE_LINK_SUCCESS_URL + `?email=${email}`);
+    res.redirect(GOOGLE_LINK_SUCCESS_REDIRECT_URL + `?email=${email}`);
+
     return;
   };
 

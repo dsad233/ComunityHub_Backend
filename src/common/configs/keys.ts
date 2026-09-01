@@ -81,19 +81,22 @@ export const GOOGLE_CLIENT_SECRET_KEY = String(
   process.env.GOOGLE_CLIENT_SECRET_KEY,
 );
 export const GOOGLE_CALLBACK_URL = String(process.env.GOOGLE_CALLBACK_URL);
-export const GOOGLE_CALLBACK_SUCCESS_URL = String(
-  process.env.GOOGLE_CALLBACK_SUCCESS_URL,
+export const GOOGLE_LOGIN_SUCCESS_REDIRECT_URL = String(
+  process.env.GOOGLE_LOGIN_SUCCESS_REDIRECT_URL,
 );
-export const GOOGLE_CALLBACK_LOGIN_URL = String(
-  process.env.GOOGLE_CALLBACK_LOGIN_URL,
+export const GOOGLE_SIGNUP_SUCCESS_REDIRECT_URL = String(
+  process.env.GOOGLE_SIGNUP_SUCCESS_REDIRECT_URL,
+);
+export const GOOGLE_SIGNUP_FAIL_REDIRECT_URL = String(
+  process.env.GOOGLE_SIGNUP_FAIL_REDIRECT_URL,
 );
 
 // 구글 계정 연동 콜백링크
 export const GOOGLE_LINK_CALLBACK_URL = String(
   process.env.GOOGLE_LINK_CALLBACK_URL,
 );
-export const GOOGLE_LINK_SUCCESS_URL = String(
-  process.env.GOOGLE_LINK_SUCCESS_URL,
+export const GOOGLE_LINK_SUCCESS_REDIRECT_URL = String(
+  process.env.GOOGLE_LINK_SUCCESS_REDIRECT_URL,
 );
 
 /**

@@ -24,15 +24,16 @@ export function GoogleStrategy(): Strategy {
       cb: VerifyCallback,
     ) => {
       if (!profile) {
-        throw new BadRequest(
-          'Google 로그인에 실패했습니다. 다시 시도해 주세요.',
-        );
+        return cb(null, false, {
+          message: 'Google 로그인에 실패했습니다. 다시 시도해 주세요.',
+        });
       }
 
       if (!profile._json.email_verified) {
-        throw new BadRequest(
-          '이메일 인증이 완료되지 않은 계정입니다. 이메일 인증 후 다시 시도해 주세요.',
-        );
+        return cb(null, false, {
+          message:
+            '이메일 인증이 완료되지 않은 계정입니다. 이메일 인증 후 다시 시도해 주세요.',
+        });
       }
 
       // 요청이 들어온 구글 계정이 유효한 계정인지 확인
@@ -47,23 +48,27 @@ export function GoogleStrategy(): Strategy {
       );
 
       if (response.status === StatusCodes.NOT_FOUND) {
-        throw new NotFound(
-          '유효하지 않은 구글 계정입니다. 다시 시도해 주세요.',
-        );
+        return cb(null, false, {
+          message: '유효하지 않은 구글 계정입니다. 다시 시도해 주세요.',
+        });
       } else if (response.status === StatusCodes.BAD_REQUEST) {
-        throw new BadRequest('올바르지 않은 요청 입니다. 다시 시도해 주세요.');
+        return cb(null, false, {
+          message: '올바르지 않은 요청 입니다. 다시 시도해 주세요.',
+        });
       }
 
       if (!response.ok) {
-        throw new NotFound(
-          '정상적으로 처리되지 않았습니다. 다시 시도해 주세요.',
-        );
+        return cb(null, false, {
+          message: '정상적으로 처리되지 않았습니다. 다시 시도해 주세요.',
+        });
       }
 
       const resJson = await response.json();
 
       if (new Date().getDate() > Number(resJson.exp)) {
-        throw new BadRequest('유효하지 않은 접근 입니다. 다시 시도해 주세요.');
+        return cb(null, false, {
+          message: '유효하지 않은 접근 입니다. 다시 시도해 주세요.',
+        });
       }
 
       const session = {
@@ -80,12 +85,19 @@ export function GoogleStrategy(): Strategy {
 
       // 계정 이메일과 계정 유형이 동일한 데이터가 있다면 기존 계정의 userId를 리턴
       const alreadyUserId = await getAccountTypeUserId(session.email);
-      if (alreadyUserId) {
+      if (alreadyUserId && alreadyUserId.users.deletedAt === State.FALSE) {
         const user = await getUser(alreadyUserId.userId);
 
         if (user) {
           return cb(null, user);
         }
+      } else if (
+        alreadyUserId &&
+        alreadyUserId.users.deletedAt === State.TRUE
+      ) {
+        return cb(null, {
+          deletedAt: State.TRUE,
+        });
       }
 
       return cb(null, session);
@@ -131,7 +143,7 @@ async function getUser(userId: string): Promise<{
 // 소셜 계정 연동 유무 조회
 async function getAccountTypeUserId(
   email: string,
-): Promise<{ userId: string } | null> {
+): Promise<{ userId: string; users: { deletedAt: State } } | null> {
   return await prisma.account_type.findFirst({
     where: {
       email: email,
@@ -139,6 +151,11 @@ async function getAccountTypeUserId(
     },
     select: {
       userId: true,
+      users: {
+        select: {
+          deletedAt: true,
+        },
+      },
     },
   });
 }
