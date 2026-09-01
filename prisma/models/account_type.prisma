@@ -10,6 +10,9 @@ model Account_type {
     userId String @map("user_id")
     users  User   @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+    // index
+    @@index([provider])
+
     @@map(name: "account_types")
 }
 

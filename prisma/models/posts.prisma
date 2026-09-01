@@ -17,5 +17,8 @@ model Post {
   userId String @map("user_id")
   users  User   @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  // index
+  @@index([title, isPublic, category, createdAt(sort: Desc)], map: "posts_idx")
+
   @@map(name: "posts")
 }

@@ -25,6 +25,11 @@ model User {
   likes Like[]
   account_types Account_type[]
 
+  // index
+  @@index([email])
+  @@index([loginId])
+  @@index([nickname])
+
   @@map(name: "users")
 }
 

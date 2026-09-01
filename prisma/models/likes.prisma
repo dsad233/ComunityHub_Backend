@@ -13,5 +13,8 @@ model Like {
   replyId String? @map("reply_id")
   replies  Comment? @relation(name: "replyLikes", fields: [replyId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  // index
+  @@index([type])
+
   @@map(name: "likes")
 }

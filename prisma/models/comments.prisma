@@ -22,5 +22,9 @@ model Comment {
   parent Comment?   @relation(name: "replyComment", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   replies Comment[]   @relation(name: "replyComment")
 
+  // index
+  @@index([type])
+  @@index([createdAt(sort: Desc)])
+
   @@map(name: "comments")
 }
