@@ -1,11 +1,6 @@
 import express, { Express } from 'express';
-import GlobalsRotuer from './globals/globals.router';
-import AuthRouter from './auth/auth.router';
-import UsersRouter from './users/users.router';
-import PostsRouter from './posts/posts.router';
-import CommentsRouter from './comments/comments.router';
-import LikesRouter from './likes/likes.router';
-import CategoryRouter from './categories/categories.router';
+
+import MainRouter from './mainRouter';
 
 import ErrorMiddleware from './common/middlewares/errorMiddleware';
 import { MorganConfig } from './common/middlewares/morganConfig';
@@ -29,6 +24,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(CorsConfig());
 if (NODE_ENV === 'prod') {
   app.use(helmet());
+  // 프록시 설정
+  app.set('trust proxy', true);
 }
 
 // MongoDB 설정
@@ -38,11 +35,8 @@ passport.use(GoogleStrategy());
 // morgan logger 설정
 app.use(MorganConfig());
 
-app.use('/auth', AuthRouter);
-app.use('/users', UsersRouter);
-app.use('/posts', [PostsRouter, CommentsRouter, LikesRouter]);
-app.use('/globals', GlobalsRotuer);
-app.use('/categories', CategoryRouter);
+// Main 라우터에 URL 연결
+app.use('/api', MainRouter);
 
 // 에러 핸들링 미들웨어
 app.use(ErrorMiddleware);
