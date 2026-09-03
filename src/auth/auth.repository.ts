@@ -1,5 +1,5 @@
-import { PrismaClient, State } from '../../generated/prisma/client';
-import { hashPassword } from '../common/utils';
+import { PrismaClient, Provider, State } from '../../generated/prisma/client';
+import { createRandomPassword, hashPassword } from '../common/utils';
 import { OmitTCreateUserDto } from './dto/createUserDto';
 
 export class AuthRepository {
@@ -8,10 +8,39 @@ export class AuthRepository {
   constructor(prisma: PrismaClient) {
     this.prisma = prisma;
   }
+  // 계정 유형 데이터 존재 유무 조회
+  getAccountTypeUserId = async (
+    email: string,
+  ): Promise<{ userId: string } | null> => {
+    return await this.prisma.account_type.findFirst({
+      where: {
+        email: email,
+        provider: 'GOOGLE',
+      },
+      select: {
+        userId: true,
+      },
+    });
+  };
+
+  // 계정 타입 정보 조회
+  getAccountTypes = async (
+    id: string,
+  ): Promise<{ email: string; provider: Provider }[]> => {
+    return await this.prisma.account_type.findMany({
+      where: {
+        userId: id,
+      },
+      select: {
+        email: true,
+        provider: true,
+      },
+    });
+  };
 
   // 중복 이메일 유무 체크
   existEmail = async (email: string): Promise<{ email: string } | null> => {
-    return await this.prisma.user.findUnique({
+    return await this.prisma.user.findFirst({
       where: { email: email },
       select: { email: true },
     });
@@ -20,7 +49,7 @@ export class AuthRepository {
   // 중복 아이디 유무 체크
   existLoginId = async (
     loginId: string,
-  ): Promise<{ loginId: string } | null> => {
+  ): Promise<{ loginId: string | null } | null> => {
     return await this.prisma.user.findUnique({
       where: { loginId: loginId },
       select: { loginId: true },
@@ -54,9 +83,8 @@ export class AuthRepository {
         email: dto.email,
         loginId: dto.loginId,
         password: await hashPassword(dto.password),
-        name: dto.name,
+        name: dto.name ?? null,
         nickname: dto.nickname,
-        image: dto.image ?? null,
         gender: dto.gender ?? null,
         birthDay: dto.birthDay ?? null,
         phoneNumber: dto.phoneNumber ?? null,
@@ -64,17 +92,56 @@ export class AuthRepository {
         roles: {
           create: {},
         },
+        account_types: {
+          create: {
+            email: dto.email,
+            provider: 'GENERAL',
+          },
+        },
+      },
+    });
+  };
+
+  // 구글 로그인 이용자 계정 생성
+  googleUserCreate = async ({
+    email,
+    nickname,
+    email_verified,
+  }: {
+    email: string;
+    nickname: string;
+    email_verified: boolean;
+  }) => {
+    await this.prisma.user.create({
+      data: {
+        email: email,
+        nickname: nickname,
+        password: await createRandomPassword(),
+        verify: email_verified ? State.TRUE : State.FALSE,
+        roles: {
+          create: {},
+        },
+        account_types: {
+          create: {
+            email: email,
+            provider: Provider.GOOGLE,
+          },
+        },
       },
     });
   };
 
   // 유저 이메일 인증 유무 조회
-  verifyEmail = async (email: string): Promise<{ verify: State } | null> => {
+  verifyEmail = async (
+    email: string,
+  ): Promise<{ id: string; verify: State } | null> => {
     return await this.prisma.user.findFirst({
       where: {
         email: email,
+        deletedAt: 'FALSE',
       },
       select: {
+        id: true,
         verify: true,
       },
     });
@@ -90,7 +157,7 @@ export class AuthRepository {
     verify: State;
   } | null> => {
     return await this.prisma.user.findFirst({
-      where: { email: email },
+      where: { email: email, deletedAt: 'FALSE' },
       select: {
         id: true,
         email: true,
@@ -105,13 +172,14 @@ export class AuthRepository {
     loginId: string,
   ): Promise<{
     id: string;
-    loginId: string;
+    loginId: string | null;
     password: string;
     verify: State;
   } | null> => {
     return await this.prisma.user.findFirst({
       where: {
         loginId: loginId,
+        deletedAt: 'FALSE',
       },
       select: {
         id: true,
@@ -124,13 +192,12 @@ export class AuthRepository {
 
   // 이메일 유저 페이로드 검증
   verifyEmailPayload = async (
-    id: string,
     email: string,
   ): Promise<{ id: string; email: string } | null> => {
     return await this.prisma.user.findFirst({
       where: {
-        id: id,
         email: email,
+        deletedAt: 'FALSE',
       },
       select: {
         id: true,
@@ -141,13 +208,12 @@ export class AuthRepository {
 
   // loginId 유저 페이로드 검증
   verifyLoginIdPayload = async (
-    id: string,
     loginId: string,
-  ): Promise<{ id: string; loginId: string } | null> => {
+  ): Promise<{ id: string; loginId: string | null } | null> => {
     return await this.prisma.user.findFirst({
       where: {
-        id: id,
-        email: loginId,
+        loginId: loginId,
+        deletedAt: 'FALSE',
       },
       select: {
         id: true,
@@ -157,10 +223,12 @@ export class AuthRepository {
   };
 
   // 이메일 인증 완료 여부 업데이트
-  updateVerify = async (email: string): Promise<void> => {
+  updateVerify = async (id: string, email: string): Promise<void> => {
     await this.prisma.user.update({
       where: {
+        id: id,
         email: email,
+        deletedAt: 'FALSE',
       },
       data: {
         verify: State.TRUE,
@@ -170,15 +238,33 @@ export class AuthRepository {
 
   // 패스워드 변경
   updatePassword = async (
+    id: string,
     email: string,
     newPassword: string,
   ): Promise<void> => {
     await this.prisma.user.update({
       where: {
+        id: id,
         email: email,
+        deletedAt: 'FALSE',
       },
       data: {
         password: await hashPassword(newPassword),
+      },
+    });
+  };
+
+  /**
+   * OAuth 2.0 Google 로그인
+   */
+
+  // 구글 연동 세션 정보 생성
+  googleSocialLink = async (id: string, email: string): Promise<void> => {
+    await this.prisma.account_type.create({
+      data: {
+        email: email,
+        provider: 'GOOGLE',
+        userId: id,
       },
     });
   };

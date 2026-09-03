@@ -1,0 +1,25 @@
+model Account_type {
+    id   String  @id @default(uuid())
+    email String @db.VarChar(254)
+    provider Provider @default(GENERAL)
+    
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    // many to one
+    userId String @map("user_id")
+    users  User   @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+    // index
+    @@index([provider])
+
+    @@map(name: "account_types")
+}
+
+// 계정 유형 enum
+enum Provider {
+  GENERAL
+  GOOGLE
+  KAKAO
+  NAVER
+}

@@ -1,0 +1,24 @@
+model Post {
+  id String  @id @default(uuid())
+  title String @db.VarChar(300)
+  context String? @db.Text
+  isPublic State @default(TRUE) @map("is_public")
+  category Category @default(FREE)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt State @default(FALSE) @map("deleted_at")
+
+  // one to many
+  comments Comment[]
+  likes Like[]
+
+  // many to one
+  userId String @map("user_id")
+  users  User   @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  // index
+  @@index([title, isPublic, category, createdAt(sort: Desc)], map: "posts_idx")
+
+  @@map(name: "posts")
+}

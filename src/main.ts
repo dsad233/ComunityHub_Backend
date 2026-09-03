@@ -1,37 +1,45 @@
-import express, { Express, Request, Response, NextFunction } from 'express';
-import AuthRouter from './auth/auth.router';
-import UsersRouter from './users/users.router';
-import PostsRouter from './posts/posts.router';
+import express, { Express } from 'express';
+
+import MainRouter from './mainRouter';
 
 import ErrorMiddleware from './common/middlewares/errorMiddleware';
+import { MorganConfig } from './common/middlewares/morganConfig';
+import { CorsConfig } from './common/middlewares/corsConfig';
 
-import { HttpError } from 'http-errors';
 import { prisma } from './common/configs/prisma-client';
-import { redisCondition } from './redis/redis.config';
 import cookieParser from 'cookie-parser';
-import Cors from './common/middlewares/core';
-import { MorganMiddleware } from './common/middlewares/morgan.middlewares';
+import { MongoDBConfig } from './common/configs/mongodb.config';
+import passport from 'passport';
+import { GoogleStrategy } from './common/middlewares/googleStrategy';
+import { NODE_ENV, RUNNING_PORT } from './common/configs/keys';
+import helmet from 'helmet';
 
 const app: Express = express();
-const port: number = 3000;
+const port: number = RUNNING_PORT;
 
-app.use(express.json());
+// req.body 수용 용량을 기존 100kb에서 50mb 수용으로 변경
+app.use(express.json({ limit: '50mb' }));
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
-app.use(Cors());
+app.use(CorsConfig());
+if (NODE_ENV === 'prod') {
+  app.use(helmet());
+  // 프록시 설정
+  app.set('trust proxy', true);
+}
 
-// Redis 상태 체크
-redisCondition();
+// MongoDB 설정
+MongoDBConfig();
+// passport 설정
+passport.use(GoogleStrategy());
+// morgan logger 설정
+app.use(MorganConfig());
 
-app.use(MorganMiddleware());
+// Main 라우터에 URL 연결
+app.use('/api', MainRouter);
 
-app.use('/auth', AuthRouter);
-app.use('/users', UsersRouter);
-app.use('/posts', PostsRouter);
-
-app.use((error: HttpError, req: Request, res: Response, next: NextFunction) =>
-  ErrorMiddleware(error, req, res, next),
-);
+// 에러 핸들링 미들웨어
+app.use(ErrorMiddleware);
 
 app.listen(port, () => {
   prisma.$connect();
@@ -45,6 +53,6 @@ process.on('exit', () => {
   setTimeout(() => {
     prisma.$disconnect();
 
-    process.exit();
+    process.exit(1);
   }, 2000);
 });

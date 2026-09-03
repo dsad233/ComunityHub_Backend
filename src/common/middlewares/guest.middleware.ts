@@ -9,15 +9,16 @@ import {
   JWT_GUEST_ACCESS_SECRET_KEY,
   JWT_GUEST_ACCESS_TTL,
 } from '../configs/keys';
+import AuthMiddleware from './auth.middleware';
 
 export default async function GuestMiddleware(
   req: Request,
   res: Response,
   next: NextFunction,
-): Promise<void> {
+): Promise<void | Response<{ message: string }>> {
   // 로그인 세션이 존재할 때, 통과 처리
-  if (req.headers.authorization || req.user) {
-    return next();
+  if (req.headers.authorization && req.headers.authorization !== 'null') {
+    return await AuthMiddleware(req, res, next);
   }
 
   // 기존 guest 세션 조회

@@ -4,14 +4,18 @@ import { Category, State } from '../../../generated/prisma/enums';
 export type TCreatePostDto = {
   title: string;
   context?: string | undefined;
-  image?: string | undefined;
   isPublic: State;
   category: Category;
+  images?: string[] | undefined;
 };
 
-export async function CreatePostDto(body: TCreatePostDto) {
-  const { title, context, image, isPublic, category } = body;
-
+export async function CreatePostDto({
+  title,
+  context,
+  isPublic,
+  category,
+  images,
+}: TCreatePostDto) {
   if (!title) {
     throw new BadRequest('게시글 제목을 입력해 주세요.');
   }
@@ -39,8 +43,8 @@ export async function CreatePostDto(body: TCreatePostDto) {
   return {
     title: title.trim(),
     context: context?.trim(),
-    image: image?.trim(),
     isPublic: isPublic,
     category: category,
+    images: images,
   };
 }

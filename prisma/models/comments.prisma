@@ -1,0 +1,30 @@
+model Comment {
+  id String  @id @default(uuid())
+  context String @db.Text
+  type Type @default(COMMENT)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt State @default(FALSE) @map("deleted_at")
+  
+  // one to many
+  likes Like[]
+  replyLikes Like[] @relation(name: "replyLikes")
+
+  // many to one
+  userId String @map("user_id")
+  users  User   @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  postId String @map("post_id")
+  posts  Post   @relation(fields: [postId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  // self-reference 
+  parentId String? @map("parent_id")
+  parent Comment?   @relation(name: "replyComment", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  replies Comment[]   @relation(name: "replyComment")
+
+  // index
+  @@index([type])
+  @@index([createdAt(sort: Desc)])
+
+  @@map(name: "comments")
+}

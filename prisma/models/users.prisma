@@ -1,0 +1,40 @@
+model User {
+  id    String  @id @default(uuid()) 
+  email String @db.VarChar(254)
+  loginId String? @unique @db.VarChar(13) @map("login_id")
+  password String
+  name  String? @db.VarChar(50)
+  nickname String @unique @db.VarChar(32)
+  gender Gender? 
+  birthDay DateTime? @db.Date @map("birth_day")
+  phoneNumber String? @unique @db.VarChar(15) @map("phone_number")
+  address String? @db.VarChar(100)
+  isPublic State @default(TRUE) @map("is_public")
+  verify State @default(FALSE)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt State @default(FALSE) @map("deleted_at")
+
+  // many to one
+  roles Role?
+
+  // one to many
+  posts Post[]
+  comments Comment[]
+  likes Like[]
+  account_types Account_type[]
+
+  // index
+  @@index([email])
+  @@index([loginId])
+  @@index([nickname])
+
+  @@map(name: "users")
+}
+
+// 성별 enum
+enum Gender { 
+  MALE 
+  FEMALE 
+}

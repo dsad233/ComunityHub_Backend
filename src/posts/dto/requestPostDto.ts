@@ -1,32 +1,50 @@
-import { NotFound } from 'http-errors';
+import { BadRequest } from 'http-errors';
+import { IsPublicStatus, OrderByStatus } from '../../common/libs/status';
 
 export type TRequestPostDto = {
-  search?: string | null;
-  category?: string | null;
-  isPublic?: string | null;
-  orderby: string;
+  search?: string | undefined;
+  category?: string | undefined;
+  isPublic: string;
+  orderBy: string;
 };
 
-export async function RequestPostDto(
-  query: TRequestPostDto,
-): Promise<TRequestPostDto> {
-  const { search, category, isPublic, orderby } = query;
+export async function RequestPostDto({
+  search,
+  category,
+  isPublic,
+  orderBy,
+}: TRequestPostDto): Promise<TRequestPostDto> {
   if (!isPublic) {
-    throw new NotFound(
+    throw new BadRequest(
       'isPublic 파라미터 값이 존재하지 않습니다. 다시 요청해 주세요.',
     );
   }
 
-  if (!orderby) {
-    throw new NotFound(
-      'orderby 파라미터 값이 존재하지 않습니다. 다시 요청해 주세요.',
+  if (!orderBy) {
+    throw new BadRequest(
+      'orderBy 파라미터 값이 존재하지 않습니다. 다시 요청해 주세요.',
     );
   }
 
+  if (isPublic) {
+    if (!Object.values(IsPublicStatus).toString().includes(isPublic)) {
+      throw new BadRequest(
+        '공개, 비공개 여부가 올바르지 않은 값 입니다. 다시 입력해 주세요.',
+      );
+    }
+  }
+
+  if (orderBy) {
+    if (!Object.values(OrderByStatus).toString().includes(orderBy)) {
+      throw new BadRequest('올바르지 않은 정렬 값 입니다. 다시 입력해 주세요.');
+    }
+  }
+
   return {
-    search: search ? search.trim() : null,
-    category: category && category.trim() !== 'ALL' ? category : null,
-    isPublic: isPublic ? isPublic.trim() : null,
-    orderby: orderby.trim(),
+    search: search?.trim(),
+    category:
+      category && category.trim() !== 'ALL' ? category.trim() : undefined,
+    isPublic: isPublic?.trim(),
+    orderBy: orderBy.trim(),
   };
 }

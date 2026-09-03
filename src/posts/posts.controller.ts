@@ -4,8 +4,8 @@ import { StatusCodes } from 'http-status-codes';
 import { CreatePostDto } from './dto/createPostDto';
 import { TPaginationDto, PaginationDto } from '../common/dto/paginationDto';
 import { RequestPostDto } from './dto/requestPostDto';
-import { Category, State } from '../../generated/prisma/enums';
-import { OrderBy } from '../common/libs/type';
+import { Category, State, Type } from '../../generated/prisma/enums';
+import { TUpdatePostDto, UpdatePostDto } from './dto/updatePostDto';
 
 export class PostsController {
   private readonly postsService: PostsService;
@@ -33,7 +33,7 @@ export class PostsController {
   ): Promise<
     Response<{
       message: string;
-      data: Array<string>;
+      data: Array<Object>;
     }>
   > => {
     return res.status(StatusCodes.OK).json({
@@ -42,19 +42,20 @@ export class PostsController {
     });
   };
 
-  // 게시글 수 조회
-  countPosts = async (
+  // 카테고리별 게시글 수 조회
+  countByCategoryPost = async (
     req: Request,
     res: Response,
-  ): Promise<Response<{ message: string; data: number }>> => {
-    return res.status(StatusCodes.OK).json({
-      message: '게시글 수 조회 완료.',
-      count: await this.postsService.countPosts(),
-    });
-  };
-
-  // 카테고리별 게시글 수 조회
-  countByCategoryPost = async (req: Request, res: Response) => {
+  ): Promise<
+    Response<{
+      message: string;
+      data: {
+        key: string;
+        name: string;
+        count: number;
+      }[];
+    }>
+  > => {
     return res.status(StatusCodes.OK).json({
       message: '카테고리별 게시글 수 조회 완료.',
       data: await this.postsService.countByCategoryPost(),
@@ -73,13 +74,22 @@ export class PostsController {
           id: string;
           title: string;
           context: string | null;
-          category: string;
+          category: {
+            key: string;
+            name: string;
+          };
           createdAt: string;
           users: { nickname: string; image: string | null };
+          count: {
+            comments: number;
+            likes: number;
+            views: number;
+          };
         }[];
         paginations: {
-          page: string;
-          pages: string;
+          page: number;
+          pages: number;
+          count: number;
         };
       };
     }>
@@ -95,7 +105,7 @@ export class PostsController {
           search: req.query.search as string,
           category: req.query.category as string,
           isPublic: req.query.isPublic as string,
-          orderby: req.query.orderby as string,
+          orderBy: req.query.orderBy as string,
         }),
       ),
     });
@@ -112,16 +122,117 @@ export class PostsController {
         id: string;
         title: string;
         context: string | null;
-        category: Category;
+        category: {
+          key: string;
+          name: string;
+        };
+        images: string[] | null;
         isPublic: State;
-        createdAt: Date;
-        users: { nickname: string; image: string | null };
+        createdAt: string;
+        users: { nickname: string; image: string | null; property: boolean };
+        count: {
+          likes: number;
+          commentCount: number;
+        };
+        comments: {
+          id: string | undefined;
+          context: string | undefined;
+          type: Type | undefined;
+          parentId: string | undefined | null;
+          createdAt: string | undefined;
+          deletedAt: string | undefined;
+          author:
+            | { nickname: string; image: string | null; property: boolean }
+            | undefined;
+          replies:
+            | {
+                id: string | null;
+                context: string | null;
+                type: Type | null;
+                parentId: string | null;
+                createdAt: string | null;
+                deletedAt: string;
+                author: { nickname: string; image: string | null };
+              }[]
+            | undefined;
+        }[];
       };
     }>
   > => {
     return res.status(StatusCodes.OK).json({
       message: '게시글 상세 조회 완료.',
-      data: await this.postsService.findOne(req.params.id as string),
+      data: await this.postsService.findOne(
+        req.params.id as string,
+        req.user?.id,
+        req.ip ?? (req.ips[0] as string),
+      ),
+    });
+  };
+
+  // 게시글 기존 정보 조회
+  getExistingPostInfo = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<
+    Response<{
+      message: string;
+      data: {
+        title: string;
+        category: Category;
+        context: string | null;
+        images: string[] | null;
+        isPublic: State;
+      };
+    }>
+  > => {
+    return res.status(StatusCodes.OK).json({
+      message: '기존 게시글 정보 조회 완료.',
+      data: await this.postsService.getExistingPostInfo(
+        req.params.id as string,
+        req.user.id as string,
+      ),
+    });
+  };
+
+  // 게시글 수정
+  update = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<
+    Response<{
+      message: string;
+    }>
+  > => {
+    await this.postsService.update(
+      req.params.id as string,
+      req.user.id as string,
+      await UpdatePostDto(req.body as TUpdatePostDto),
+    );
+
+    return res.status(StatusCodes.OK).json({
+      message: '게시글 업데이트 완료.',
+    });
+  };
+
+  // 게시글 삭제 (소프트 삭제)
+  remove = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<
+    Response<{
+      message: string;
+    }>
+  > => {
+    await this.postsService.remove(
+      req.params.id as string,
+      req.user.id as string,
+    );
+
+    return res.status(StatusCodes.OK).json({
+      message: '게시글 삭제 완료.',
     });
   };
 }

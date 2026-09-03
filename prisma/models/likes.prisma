@@ -1,0 +1,20 @@
+model Like {
+  id String  @id @default(uuid())
+  type Type @default(COMMENT)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // many to one
+  userId String @map("user_id")
+  users  User   @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  postId String @map("post_id")
+  posts  Post   @relation(fields: [postId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  commentId String? @map("comment_id")
+  comments  Comment?   @relation(fields: [commentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  replyId String? @map("reply_id")
+  replies  Comment? @relation(name: "replyLikes", fields: [replyId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  // index
+  @@index([type])
+
+  @@map(name: "likes")
+}

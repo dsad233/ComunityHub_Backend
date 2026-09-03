@@ -8,7 +8,15 @@ import {
   SignInDto,
   UpdatePassowrdDto,
   UpdatePasswordRequestDto,
+  AuthEmailDto,
 } from './dto';
+import {
+  GOOGLE_LINK_SUCCESS_REDIRECT_URL,
+  GOOGLE_LOGIN_SUCCESS_REDIRECT_URL,
+  GOOGLE_SIGNUP_FAIL_REDIRECT_URL,
+  GOOGLE_SIGNUP_SUCCESS_REDIRECT_URL,
+} from '../common/configs/keys';
+import { State } from '../../generated/prisma/enums';
 
 export class AuthController {
   private readonly authService: AuthService;
@@ -16,6 +24,38 @@ export class AuthController {
   constructor(authService: AuthService) {
     this.authService = authService;
   }
+
+  // 로그인 아이디 유무 확인
+  checkLoginId = async (
+    req: Request,
+    res: Response,
+  ): Promise<Response<{ message: string; data: boolean }>> => {
+    return res.status(StatusCodes.OK).json({
+      verify: await this.authService.checkLoginId(req.query.loginId as string),
+    });
+  };
+
+  // 이메일 유무 확인
+  checkEmail = async (
+    req: Request,
+    res: Response,
+  ): Promise<Response<{ message: string; data: boolean }>> => {
+    return res.status(StatusCodes.OK).json({
+      verify: await this.authService.checkEmail(req.query.email as string),
+    });
+  };
+
+  // 닉네임 유무 확인
+  checkNickname = async (
+    req: Request,
+    res: Response,
+  ): Promise<Response<{ message: string; data: boolean }>> => {
+    return res.status(StatusCodes.OK).json({
+      verify: await this.authService.checkNickname(
+        req.query.nickname as string,
+      ),
+    });
+  };
 
   // 유저 생성
   signUp = async (
@@ -120,11 +160,85 @@ export class AuthController {
   ): Promise<Response<{ message: string }>> => {
     const token = await this.authService.authenticationEmail(
       (await CertifiEmailDto(req.body.email)).email,
-      req.body.code,
+      await AuthEmailDto(req.body),
     );
 
     return res
       .status(StatusCodes.OK)
       .json({ message: '이메일 인증 완료.', token: token });
+  };
+
+  /**
+   * OAuth 2.0 Google 로그인
+   */
+
+  // Google 로그인 요청
+  googleCallback = async (req: Request, res: Response): Promise<void> => {
+    // 이미 회원 가입 이력이 있을 시에, 로그인 처리
+    if (req.user.id) {
+      const tokens = await this.authService.googleSignIn(req.user);
+      res.redirect(
+        GOOGLE_LOGIN_SUCCESS_REDIRECT_URL +
+          `?res_ack=${tokens.access_token}&res_ref=${tokens.refresh_token}`,
+      );
+
+      return;
+    }
+
+    // 회원 탈퇴한 세션 일때
+    if (req.user?.deletedAt === State.TRUE) {
+      res.redirect(
+        GOOGLE_SIGNUP_FAIL_REDIRECT_URL +
+          `?message=${'회원 탈퇴한 계정 입니다. 문의 해주세요.'}`,
+      );
+
+      return;
+    }
+
+    // 구글 계정으로 회원 가입 진행 처리
+    await this.authService.googleSignUp(req.user);
+    res.redirect(
+      GOOGLE_SIGNUP_SUCCESS_REDIRECT_URL + `?email=${req.user.email}`,
+    );
+
+    return;
+  };
+
+  // 구글 계정 연동 URL 요청
+  googleSocialLink = (
+    req: Request,
+    res: Response,
+  ): Response<{ data: string }> => {
+    return res.status(StatusCodes.OK).json({
+      url: this.authService.googleSocialLink(),
+    });
+  };
+
+  // 구글 계정 연동 콜백
+  googleSocialLinkCallback = async (
+    req: Request,
+    res: Response,
+  ): Promise<void> => {
+    const email = await this.authService.googleSocialLinkCallback(
+      req.query.code as string,
+    );
+    res.redirect(GOOGLE_LINK_SUCCESS_REDIRECT_URL + `?email=${email}`);
+
+    return;
+  };
+
+  // 구글 계정 등록 처리
+  googleSocialLinkRegister = async (
+    req: Request,
+    res: Response,
+  ): Promise<Response<{ message: string }>> => {
+    await this.authService.googleSocialLinkRegister(
+      req.user.id,
+      req.body.email,
+    );
+
+    return res.status(StatusCodes.OK).json({
+      message: '구글 계정 연동 완료.',
+    });
   };
 }

@@ -7,33 +7,30 @@ type TCreateUserDto = {
   loginId: string;
   password: string;
   confirmPassword: string;
-  name: string;
+  name: string | undefined;
   nickname: string;
-  image?: string | undefined;
   gender?: Gender | undefined;
   birthDay?: Date | undefined;
   phoneNumber?: string | undefined;
+  address?: string | undefined;
   isPublic: State;
 };
 
 export type OmitTCreateUserDto = Omit<TCreateUserDto, 'confirmPassword'>;
 
-export async function CreateUserDto(
-  body: TCreateUserDto,
-): Promise<OmitTCreateUserDto> {
-  const {
-    email,
-    loginId,
-    password,
-    confirmPassword,
-    name,
-    nickname,
-    image,
-    gender,
-    birthDay,
-    phoneNumber,
-    isPublic,
-  } = body;
+export async function CreateUserDto({
+  email,
+  loginId,
+  password,
+  confirmPassword,
+  name,
+  nickname,
+  gender,
+  birthDay,
+  phoneNumber,
+  address,
+  isPublic,
+}: TCreateUserDto): Promise<OmitTCreateUserDto> {
   // 입력 유무 검증
   if (!email) {
     throw new BadRequest('이메일을 입력해 주세요.');
@@ -49,10 +46,6 @@ export async function CreateUserDto(
 
   if (!confirmPassword) {
     throw new BadRequest('패스워드 확인란을 입력해 주세요.');
-  }
-
-  if (!name) {
-    throw new BadRequest('이름을 입력해 주세요.');
   }
 
   if (!nickname) {
@@ -78,10 +71,6 @@ export async function CreateUserDto(
     throw new BadRequest('ID는 2자 이상 13자 이하로 입력해 주세요.');
   }
 
-  if (name.trim().length < 1 || name.trim().length > 50) {
-    throw new BadRequest('이름은 2자 이상 50자 이하로 입력해 주세요.');
-  }
-
   if (!password.trim().match(regEx.password)) {
     throw new BadRequest(
       '패스워드는 대문자, 기호, 소문자, 숫자 등을 최소 8자 이상 입력해 주세요.',
@@ -104,14 +93,18 @@ export async function CreateUserDto(
     throw new BadRequest('닉네임은 2자 이상 32자 이하로 입력해 주세요.');
   }
 
-  if (gender && ![Gender.MALE, Gender.FEMALE].includes(gender as Gender)) {
-    throw new BadRequest('성별은 남자, 여자를 입력해 주세요.');
+  if (gender) {
+    if (![Gender.MALE, Gender.FEMALE].includes(gender as Gender)) {
+      throw new BadRequest('성별은 남자, 여자를 입력해 주세요.');
+    }
   }
 
-  if (birthDay && !String(birthDay).trim().match(regEx.date)) {
-    throw new BadRequest(
-      '생년월일 형식이 올바르지 않습니다. 다시 입력해 주세요.',
-    );
+  if (birthDay) {
+    if (!String(birthDay).trim().match(regEx.date)) {
+      throw new BadRequest(
+        '생년월일 형식이 올바르지 않습니다. 다시 입력해 주세요.',
+      );
+    }
   }
 
   if (phoneNumber) {
@@ -125,16 +118,22 @@ export async function CreateUserDto(
     }
   }
 
+  if (address) {
+    if (address?.trim().length < 1 || address?.trim().length > 100) {
+      throw new BadRequest('주소는 2자 이상 100자 이하로 입력해 주세요.');
+    }
+  }
+
   return {
     email: email.trim(),
     loginId: loginId.trim(),
     password: password.trim(),
-    name: name.trim(),
+    name: name?.trim(),
     nickname: nickname.trim(),
-    image: image?.trim(),
     gender: gender,
     birthDay: birthDay ? new Date(birthDay) : undefined,
     phoneNumber: phoneNumber?.trim(),
+    address: address?.trim(),
     isPublic: isPublic,
   };
 }

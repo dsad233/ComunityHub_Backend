@@ -1,14 +1,14 @@
 export type TPaginationDto = {
-  page: string;
-  pages: string;
+  page: string | number;
+  pages: string | number;
 };
 
-export async function PaginationDto(
-  query: TPaginationDto,
-): Promise<TPaginationDto> {
-  const { page, pages } = query;
+export async function PaginationDto({
+  page,
+  pages,
+}: TPaginationDto): Promise<TPaginationDto> {
   return {
-    page: page ?? '1',
-    pages: pages ?? '10',
+    page: page && typeof page === 'string' ? Number(page) : 1,
+    pages: page && typeof page === 'string' ? Number(pages) : 10,
   };
 }

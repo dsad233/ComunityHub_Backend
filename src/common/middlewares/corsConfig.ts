@@ -1,8 +1,9 @@
 import cors from 'cors';
+import { SERVER_URL } from '../configs/keys';
 
-export default function Cors() {
+export function CorsConfig() {
   const corsOptions = {
-    origin: ['http://localhost:5173'],
+    origin: [SERVER_URL],
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
     // 응답 헤더에 Access-Control-Allow-Credentials 추가
     credentials: true,

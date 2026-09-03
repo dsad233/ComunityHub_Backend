@@ -1,5 +1,5 @@
 import nodemailer from 'nodemailer';
-import { MAIL_PASS, MAIL_USER } from '../common/configs/keys';
+import { MAIL_PASS, MAIL_USER, SERVER_URL } from '../common/configs/keys';
 
 export class MailerService {
   async send(email: string, constant: number | null) {
@@ -122,7 +122,7 @@ export class MailerService {
                           <tr>
                             <td align="center" bgcolor="#111827" style="border-radius:14px;">
                               <a
-                                href="http://localhost:3000/auth/verify?email=${encodeURIComponent(email)}"
+                                href="${SERVER_URL}/auth/email/verify?email=${encodeURIComponent(email)}"
                                 style="display:inline-block;padding:16px 28px;color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;"
                               >
                                 이메일 인증하기
