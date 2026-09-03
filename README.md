@@ -1,4 +1,4 @@
-# Type Node - 커뮤니티 웹 프로젝트
+# ComunityHub - 커뮤니티 웹 프로젝트
 
 Node.js와 TypeScript를 기반으로 한 현대적인 커뮤니티 웹 서비스입니다. Express, Prisma, Redis를 활용하여 구축되었습니다.
 
@@ -7,7 +7,7 @@ Node.js와 TypeScript를 기반으로 한 현대적인 커뮤니티 웹 서비�
 
 ## 🎯 프로젝트 개요
 
-- **프로젝트명**: Type Node
+- **프로젝트명**: ComunityHub
 - **버전**: 1.0.0
 - **라이선스**: MIT
 - **기술 스택**: Node.js, TypeScript, Express, Prisma, Redis, MySQL
