@@ -4,7 +4,8 @@
   "main": "./src/main.ts",
   "license": "MIT",
   "scripts": {
-    "start": "tsx ./src/main.ts",
+    "dev": "cross-env NODE_ENV=dev tsx ./src/main.ts",
+    "start": "cross-env NODE_ENV=prod tsx ./src/main.ts", 
     "build": "tsc --build",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -18,6 +19,7 @@
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
+    "cross-env": "^10.1.0",
     "dotenv": "^17.3.1",
     "eslint": "^10.2.1",
     "express": "^5.2.1",
