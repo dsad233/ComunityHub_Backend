@@ -25,6 +25,14 @@ export enum PrefixType {
 }
 
 /**
+ * 권한 타입
+ */
+export enum AuthorityType {
+  USER = '유저',
+  ADMIN = '관리자',
+}
+
+/**
  * Posts
  */
 export enum CategoryType {

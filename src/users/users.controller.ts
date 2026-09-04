@@ -42,7 +42,7 @@ export class UsersController {
         verify: State;
         isPublic: State;
         createdAt: string;
-        roles: { authority: Authority } | null;
+        roles: { authority: string } | null;
         provider: Provider[];
         posts: Array<{
           id: string;

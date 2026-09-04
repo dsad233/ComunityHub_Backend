@@ -1,8 +1,9 @@
 import bcrypt from 'bcrypt';
 import { BCYPT_PASSWORD_SALT } from './configs/keys';
-import { CategoryType } from './libs/type';
+import { AuthorityType, CategoryType } from './libs/type';
 import fs from 'fs';
 import path from 'path';
+import { Authority } from '../../generated/prisma/enums';
 
 /**
  * 패스워드 관련
@@ -209,3 +210,12 @@ export const filterTexts = fs.readFileSync(
   path.join(__dirname, './filter_text.txt'),
   'utf-8',
 ) as string;
+
+// 권한명 번역 함수
+export function transRoleName(role: Authority): string | undefined {
+  for (let prop of Object.entries(AuthorityType)) {
+    if (prop[0] === role) {
+      return prop[1];
+    }
+  }
+}
