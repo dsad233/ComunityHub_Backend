@@ -25,7 +25,7 @@ export class AuthController {
     this.authService = authService;
   }
 
-  // 로그인 아이디 유무 확인
+  // 로그인 아이디 유무 확인 및 유효성 검사
   checkLoginId = async (
     req: Request,
     res: Response,
@@ -35,7 +35,7 @@ export class AuthController {
     });
   };
 
-  // 이메일 유무 확인
+  // 이메일 유무 확인 및 유효성 검사
   checkEmail = async (
     req: Request,
     res: Response,
@@ -45,7 +45,7 @@ export class AuthController {
     });
   };
 
-  // 닉네임 유무 확인
+  // 닉네임 유무 확인 및 유효성 검사
   checkNickname = async (
     req: Request,
     res: Response,
@@ -54,6 +54,16 @@ export class AuthController {
       verify: await this.authService.checkNickname(
         req.query.nickname as string,
       ),
+    });
+  };
+
+  // 이름 유효성 검사
+  checkName = async (
+    req: Request,
+    res: Response,
+  ): Promise<Response<{ message: string; data: boolean }>> => {
+    return res.status(StatusCodes.OK).json({
+      verify: await this.authService.checkName(req.query.name as string),
     });
   };
 

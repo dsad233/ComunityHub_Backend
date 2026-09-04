@@ -1,6 +1,8 @@
 import bcrypt from 'bcrypt';
 import { BCYPT_PASSWORD_SALT } from './configs/keys';
 import { CategoryType } from './libs/type';
+import fs from 'fs';
+import path from 'path';
 
 /**
  * 패스워드 관련
@@ -197,3 +199,13 @@ export function contextTranslate(html: string | null): string | null {
 
   return contextStr;
 }
+
+/**
+ * 기타 함수 목록
+ */
+
+// 비속어 텍스트 목록
+export const filterTexts = fs.readFileSync(
+  path.join(__dirname, './filter_text.txt'),
+  'utf-8',
+) as string;
