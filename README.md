@@ -26,7 +26,6 @@ Node.js와 TypeScript를 기반으로 한 현대적인 커뮤니티 웹 서비�
 
 - 게시글 댓글 및 대댓글 시스템
 - 사용자 프로필 관리
-- 탈퇴 유저 정보 자동 처리
 - 인기 작성자 순위 시스템 (TOP 3)
 - 인기도 가중치 계산 (조회수, 좋아요, 댓글)
 
@@ -43,10 +42,9 @@ Node.js와 TypeScript를 기반으로 한 현대적인 커뮤니티 웹 서비�
 
 ### 최적화
 
-- Redis 캐싱 지원 (30분 단위)
+- Redis 캐싱 지원 (10 ~ 30분 단위)
 - 인기 게시글 순위 관리
 - 중복 조회수 방지 (IP 기반)
-- 페이지네이션 지원
 
 ### 인증 및 보안
 
@@ -54,15 +52,6 @@ Node.js와 TypeScript를 기반으로 한 현대적인 커뮤니티 웹 서비�
 - Google OAuth 2.0 로그인
 - bcrypt 비밀번호 암호화
 - Helmet을 통한 보안 헤더 설정
-- 권한 관리 (User, Admin, Moderator)
-
-## 📦 설치 및 실행
-
-### 필수 요구사항
-
-- Node.js 22+
-- MySQL
-- Redis
 
 ## 📁 프로젝트 구조
 
@@ -111,22 +100,21 @@ src/
 - `GET /posts` - 게시글 목록 조회 (페이지네이션, 정렬)
 - `GET /posts/:id` - 게시글 상세 조회
 - `POST /posts` - 게시글 작성
-- `PATCH /posts/:id` - 게시글 수정
-- `DELETE /posts/:id` - 게시글 삭제
+- `PATCH /posts/:id/update` - 게시글 수정
+- `patch /posts/:id/remove` - 게시글 삭제
+- `GET /posts/count/categories` - 카테고리별 게시글 수
 
 ### 카테고리
 
-- `GET /categories` - 카테고리 목록 조회
-- `GET /categories/count` - 카테고리별 게시글 수
 - `GET /categories/popular` - 인기 카테고리 조회
 
 ### 커뮤니티 통계
 
 - `GET /globals/users/count` - 총 사용자 수
 - `GET /globals/comments/count` - 총 댓글 수
-- `GET /globals/posts/today` - 당일 게시글 수
-- `GET /globals/today/counts` - 당일 통계 (게시글, 댓글, 좋아요, 가입)
-- `GET /globals/users/popular` - 인기 작성자 TOP 10
+- `GET /globals/todays/post/count` - 당일 게시글 수
+- `GET /globals/todays/count` - 당일 통계 (게시글, 댓글, 좋아요, 가입)
+- `GET /globals/populars/post` - 인기 작성자 TOP3
 
 ## 🎯 핵심 서비스 설명
 
@@ -143,11 +131,7 @@ src/
 
 카테고리 관리 및 인기도 분석
 
-- 인기 카테고리 자동 계산
-- 가중치 기반 인기도 산출:
-  - 좋아요: POST_LIKE_WEIGHT
-  - 댓글: POST_COMMENT_WEIGHT
-  - 조회수: POST_VIEW_WEIGHT
+- 인기 카테고리 조회
 
 ### GlobalsService
 
@@ -174,13 +158,12 @@ src/
 
 ### 조회 데이터 캐시 메모리 적재
 
-- `CACHED:POSTS:1:category=FREE:orderBy=NEW:` - 게시글 목록 데이터 캐시
+- `CACHED:POSTS:{postId}:category=FREE:orderBy=NEW` - 게시글 목록 데이터 캐시
 - `CACHED:TODAY:NEW:COUNT` - 당일 통계 캐시 (게시글, 댓글, 좋아요, 가입)
 
 ### 캐시 정책
 
-- TTL: 30분 (1800초)
-- 자동 갱신: 데이터 변경 시 즉시 무효화
+- TTL: 10분 (600초) ~ 30분 (1800초)
 
 ## 📝 라이선스
 
@@ -188,4 +171,4 @@ src/
 
 ---
 
-**마지막 업데이트**: 2026년 9월 1일
+**마지막 업데이트**: 2026년 9월 7일
