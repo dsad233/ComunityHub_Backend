@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-export default function AsyncWrapper(callback: Function): any {
+export default function AsyncWrapper(callback: any): any {
   return async (
     req: Request,
     res: Response,

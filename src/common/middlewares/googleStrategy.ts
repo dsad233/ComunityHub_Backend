@@ -1,4 +1,3 @@
-import { BadRequest, NotFound } from 'http-errors';
 import { Profile, Strategy, VerifyCallback } from 'passport-google-oauth20';
 import {
   GOOGLE_CALLBACK_URL,
@@ -6,8 +5,9 @@ import {
   GOOGLE_CLIENT_SECRET_KEY,
 } from '../configs/keys';
 import { prisma } from '../configs/prisma-client';
-import { Gender, State } from '../../../generated/prisma/enums';
+import { State } from '../../../generated/prisma/enums';
 import { StatusCodes } from 'http-status-codes';
+import { TReqUser, TSignUpGoogleReqUser } from '../libs/type';
 
 export function GoogleStrategy(): Strategy {
   return new Strategy(
@@ -76,12 +76,7 @@ export function GoogleStrategy(): Strategy {
         nickname: profile.displayName.trim(),
         accessToken: accessToken,
         email_verified: profile._json.email_verified,
-      } as {
-        email: string;
-        nickname: string;
-        accessToken: string;
-        email_verified: boolean;
-      };
+      } as TSignUpGoogleReqUser;
 
       // 계정 이메일과 계정 유형이 동일한 데이터가 있다면 기존 계정의 userId를 리턴
       const alreadyUserId = await getAccountTypeUserId(session.email);
@@ -106,18 +101,7 @@ export function GoogleStrategy(): Strategy {
 }
 
 // 유저 정보 반환
-async function getUser(userId: string): Promise<{
-  id: string;
-  email: string;
-  loginId: string | null;
-  name: string | null;
-  nickname: string;
-  gender: Gender | null;
-  birthDay: Date | null;
-  phoneNumber: string | null;
-  isPublic: State;
-  verify: State;
-} | null> {
+async function getUser(userId: string): Promise<TReqUser | null> {
   const user = await prisma.user.findFirst({
     where: {
       id: userId,

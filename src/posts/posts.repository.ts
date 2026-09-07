@@ -11,7 +11,6 @@ import {
   parseCreatedAt,
 } from '../common/utils';
 import { TCreatePostDto, TRequestPostDto, TUpdatePostDto } from './dto';
-import { PostsSchema as _PostsSchema } from '../../mongodb/schemas/posts.mongo';
 import { PostsSchema } from '../common/configs/mongodb.config';
 import { Types } from 'mongoose';
 import {
@@ -44,7 +43,7 @@ export class PostsRepository {
 
     if (dto.images?.length) {
       // 이미지를 하나씩 저장
-      for (let image of dto.images) {
+      for (const image of dto.images) {
         await this.createImages(post.id, image);
       }
     }
@@ -102,10 +101,18 @@ export class PostsRepository {
   };
 
   // 카테고리 목록 조회
-  findCategory = async (): Promise<Array<Object>> => {
-    const categories: Array<Object> = [];
+  findCategory = async (): Promise<
+    Array<{
+      key: string;
+      name: string;
+    }>
+  > => {
+    const categories: Array<{
+      key: string;
+      name: string;
+    }> = [];
 
-    for (let category of Object.entries(CategoryType)) {
+    for (const category of Object.entries(CategoryType)) {
       categories.push({
         key: category[0],
         name: category[1],
@@ -117,7 +124,7 @@ export class PostsRepository {
 
   // 게시글 수 조회
   countPosts = async (category: string): Promise<number> => {
-    const where: any = {
+    const where: Record<string, any> = {
       isPublic: 'TRUE',
       deletedAt: 'FALSE',
     };
@@ -161,7 +168,7 @@ export class PostsRepository {
   // 게시글 조회수 조회
   findPostCount = async (id: string): Promise<number> => {
     const post = await PostsSchema.findById(id);
-    return Number(post?.count) ?? 0;
+    return Number(post?.count) || 0;
   };
 
   // 조회수 높은 게시글 ID들 조회
@@ -201,7 +208,7 @@ export class PostsRepository {
       };
     }[]
   > => {
-    let where: any = { isPublic: 'TRUE', deletedAt: 'FALSE' };
+    let where: Record<string, any> = { isPublic: 'TRUE', deletedAt: 'FALSE' };
 
     // 게시글 제목, 내용, 작성자 검색
     if (query.search) {
@@ -255,7 +262,7 @@ export class PostsRepository {
       };
     }
 
-    let orderBy: any = {};
+    let orderBy: Record<string, any> = {};
 
     if (query.orderBy === OrderByStatus.NEW) {
       orderBy['createdAt'] = 'desc';

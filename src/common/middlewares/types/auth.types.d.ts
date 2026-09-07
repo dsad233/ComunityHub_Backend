@@ -1,6 +1,8 @@
+import { TReqUser, TSignUpGoogleReqUser } from '../../libs/type';
+
 declare namespace Express {
   export interface Request {
-    user: any;
+    user: TReqUser | TSignUpGoogleReqUser;
     guest: any;
   }
   export interface Response {

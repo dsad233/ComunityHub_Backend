@@ -166,7 +166,7 @@ export function categoryTranslate(category: string): {
   name: string;
 } {
   let transCategory: any = {};
-  for (let prop of Object.entries(CategoryType)) {
+  for (const prop of Object.entries(CategoryType)) {
     if (category === prop[0]) {
       transCategory['key'] = prop[0];
       transCategory['name'] = prop[1];
@@ -213,7 +213,7 @@ export const filterTexts = fs.readFileSync(
 
 // 권한명 번역 함수
 export function transRoleName(role: Authority): string | undefined {
-  for (let prop of Object.entries(AuthorityType)) {
+  for (const prop of Object.entries(AuthorityType)) {
     if (prop[0] === role) {
       return prop[1];
     }

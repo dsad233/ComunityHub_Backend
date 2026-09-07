@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "cross-env NODE_ENV=dev tsx ./src/main.ts",
-    "start": "cross-env NODE_ENV=prod tsx ./src/main.ts", 
+    "start": "pnpm run lint && cross-env NODE_ENV=prod tsx ./src/main.ts",
     "build": "tsc --build",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -14,6 +14,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@eslint/js": "^10.0.1",
     "@prisma/adapter-mariadb": "^7.2.0",
     "@prisma/client": "^7.2.0",
     "bcrypt": "^6.0.0",
@@ -32,6 +33,7 @@
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.7.3",
     "morgan": "^1.10.1",
+    "node-cron": "^4.6.0",
     "nodemailer": "^8.0.7",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",

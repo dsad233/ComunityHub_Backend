@@ -1,5 +1,5 @@
 import { AuthService } from './auth.service';
-import { NextFunction, Request, Response } from 'express';
+import { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import {
   CertifiEmailDto,
@@ -71,7 +71,6 @@ export class AuthController {
   signUp = async (
     req: Request,
     res: Response,
-    next: NextFunction,
   ): Promise<Response<{ message: string }>> => {
     await this.authService.signUp(await CreateUserDto(req.body));
 
@@ -82,7 +81,6 @@ export class AuthController {
   verifyEmail = async (
     req: Request,
     res: Response,
-    next: NextFunction,
   ): Promise<Response<{ message: string }>> => {
     await this.authService.verifyEmail(
       (await CertifiEmailDto(req.query.email as string)).email,
@@ -95,7 +93,6 @@ export class AuthController {
   signIn = async (
     req: Request,
     res: Response,
-    next: NextFunction,
   ): Promise<
     Response<{
       message: string;
@@ -114,7 +111,6 @@ export class AuthController {
   signOut = async (
     req: Request,
     res: Response,
-    next: NextFunction,
   ): Promise<Response<{ message: string }>> => {
     await this.authService.signOut(req.user.id);
     return res.status(StatusCodes.OK).json({ message: '로그아웃 완료.' });
@@ -124,7 +120,6 @@ export class AuthController {
   reissue = async (
     req: Request,
     res: Response,
-    next: NextFunction,
   ): Promise<Response<{ message: string }>> => {
     const { refreshToken } = req.body;
 
@@ -139,7 +134,6 @@ export class AuthController {
   updatePassword = async (
     req: Request,
     res: Response,
-    next: NextFunction,
   ): Promise<Response<{ message: string }>> => {
     await this.authService.updatePassword(
       await UpdatePasswordRequestDto(req.query as TUpdatePasswordRequestDto),
@@ -153,7 +147,6 @@ export class AuthController {
   certifiEmail = async (
     req: Request,
     res: Response,
-    next: NextFunction,
   ): Promise<Response<{ message: string }>> => {
     await this.authService.certifiEmail(
       (await CertifiEmailDto(req.body.email)).email,
@@ -166,7 +159,6 @@ export class AuthController {
   authenticationEmail = async (
     req: Request,
     res: Response,
-    next: NextFunction,
   ): Promise<Response<{ message: string }>> => {
     const token = await this.authService.authenticationEmail(
       (await CertifiEmailDto(req.body.email)).email,

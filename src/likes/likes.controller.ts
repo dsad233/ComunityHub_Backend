@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response } from 'express';
 import { LikesService } from './likes.service';
 import { StatusCodes } from 'http-status-codes';
 import {
@@ -20,7 +20,6 @@ export class LikesController {
   createAndDelete = async (
     req: Request,
     res: Response,
-    next: NextFunction,
   ): Promise<Response<{ message: string }>> => {
     const like = await this.likesService.createAndDelete(
       await RequestPostLikeDto(req.params as TRequestPostLikeDto),
@@ -42,7 +41,6 @@ export class LikesController {
   createCommentAndDelete = async (
     req: Request,
     res: Response,
-    next: NextFunction,
   ): Promise<Response<{ message: string }>> => {
     const like = await this.likesService.createCommentAndDelete(
       await RequestCommentLikeDto(req.params as TRequestCommentLikeDto),
@@ -64,7 +62,6 @@ export class LikesController {
   createReplyAndDelete = async (
     req: Request,
     res: Response,
-    next: NextFunction,
   ): Promise<Response<{ message: string }>> => {
     const like = await this.likesService.createReplyAndDelete(
       await RequestReplyLikeDto(req.params as TRequestReplyLikeDto),

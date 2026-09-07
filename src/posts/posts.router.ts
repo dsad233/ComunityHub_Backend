@@ -1,4 +1,4 @@
-import express, { Request, Response, NextFunction } from 'express';
+import express from 'express';
 import { prisma } from '../common/configs/prisma-client';
 import { redis } from '../redis/redis.config';
 

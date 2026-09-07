@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from 'express';
+import { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import { UsersService } from './users.service';
 import {
@@ -12,13 +12,7 @@ import {
   UpdateProfileDto,
   UpdateUserDto,
 } from './dto';
-import {
-  Authority,
-  Gender,
-  Provider,
-  State,
-  Type,
-} from '../../generated/prisma/enums';
+import { Gender, Provider, State, Type } from '../../generated/prisma/enums';
 import { PaginationDto } from '../common/dto/paginationDto';
 
 export class UsersController {
@@ -196,7 +190,6 @@ export class UsersController {
   getExistingProfileInfo = async (
     req: Request,
     res: Response,
-    next: NextFunction,
   ): Promise<
     Response<{
       message: string;
@@ -222,7 +215,6 @@ export class UsersController {
   getExistingInfo = async (
     req: Request,
     res: Response,
-    next: NextFunction,
   ): Promise<
     Response<{
       message: string;
@@ -253,7 +245,6 @@ export class UsersController {
   prifileUpdate = async (
     req: Request,
     res: Response,
-    next: NextFunction,
   ): Promise<Response<{ message: string }>> => {
     await this.usersService.prifileUpdate(
       (await RequestUserDto(req.user.id as string)).id,
@@ -268,7 +259,6 @@ export class UsersController {
   update = async (
     req: Request,
     res: Response,
-    next: NextFunction,
   ): Promise<Response<{ message: string }>> => {
     await this.usersService.update(
       (await RequestUserDto(req.user.id as string)).id,
@@ -283,7 +273,6 @@ export class UsersController {
   remove = async (
     req: Request,
     res: Response,
-    next: NextFunction,
   ): Promise<Response<{ message: string }>> => {
     await this.usersService.remove(
       (await RequestUserDto(req.user.id as string)).id,

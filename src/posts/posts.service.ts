@@ -30,7 +30,12 @@ export class PostsService {
   };
 
   // 카테고리 목록 조회
-  findCategory = async (): Promise<Array<Object>> => {
+  findCategory = async (): Promise<
+    Array<{
+      key: string;
+      name: string;
+    }>
+  > => {
     return await this.postsRepository.findCategory();
   };
 
@@ -48,13 +53,17 @@ export class PostsService {
       GAME: '게임',
     };
 
-    const result = [];
+    const result: Array<{
+      key: string;
+      name: string;
+      count: number;
+    }> = [];
 
     const counts = await this.postsRepository.countByCategoryPost();
 
     if (counts.length) {
       for (let i = 0; i < counts.length; i++) {
-        for (let [key, value] of Object.entries(categoryMap)) {
+        for (const [key, value] of Object.entries(categoryMap)) {
           if (counts[i]?.category === key) {
             result.push({
               key: key,
@@ -444,7 +453,7 @@ export class PostsService {
 
       // 기존 이미지가 없다면, 이미지 생성 처리
       if (postImageIds.length === 0) {
-        for (let image of body.images) {
+        for (const image of body.images) {
           await this.postsRepository.createImages(id, image);
         }
 
@@ -455,7 +464,7 @@ export class PostsService {
       await this.postsRepository.removeImages(id, postImageIds);
 
       // 새 이미지로 생성 처리
-      for (let image of body.images) {
+      for (const image of body.images) {
         await this.postsRepository.createImages(id, image);
       }
     }

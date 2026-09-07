@@ -2,7 +2,6 @@ import { NotFound } from 'http-errors';
 import { UsersRepository } from './users.repository';
 import {
   Authority,
-  Category,
   Gender,
   Provider,
   State,
