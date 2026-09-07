@@ -27,7 +27,7 @@ export class CommentsController {
   ): Promise<Response<{ message: string }>> => {
     await this.commentsService.create(
       await RequestCommentCreateDto(req.params.id as string),
-      req.user.id as string,
+      req.user?.id as string,
       await CreateCommentDto(req.body),
     );
     return res.status(StatusCodes.CREATED).json({
@@ -44,7 +44,7 @@ export class CommentsController {
       await RequestReplyCommentCreateDto(
         req.params as TRequestReplyCommentCreateDto,
       ),
-      req.user.id as string,
+      req.user?.id as string,
       await CreateCommentDto(req.body),
     );
     return res.status(StatusCodes.CREATED).json({
@@ -59,7 +59,7 @@ export class CommentsController {
   ): Promise<Response<{ message: string }>> => {
     await this.commentsService.update(
       await RequestCommentUpdateDto(req.params as TRequestCommentUpdateDto),
-      req.user.id as string,
+      req.user?.id as string,
       await UpdateCommentDto(req.body as TUpdateCommentDto),
     );
     return res.status(StatusCodes.OK).json({
@@ -76,7 +76,7 @@ export class CommentsController {
       await RequestReplyCommentUpdateDto(
         req.params as TRequestReplyCommentUpdateDto,
       ),
-      req.user.id as string,
+      req.user?.id as string,
       await UpdateCommentDto(req.body as TUpdateCommentDto),
     );
     return res.status(StatusCodes.OK).json({
@@ -91,7 +91,7 @@ export class CommentsController {
   ): Promise<Response<{ message: string }>> => {
     await this.commentsService.remove(
       await RequestCommentUpdateDto(req.params as TRequestCommentUpdateDto),
-      req.user.id as string,
+      req.user?.id as string,
     );
     return res.status(StatusCodes.OK).json({
       message: '댓글 삭제 완료.',
@@ -107,7 +107,7 @@ export class CommentsController {
       await RequestReplyCommentUpdateDto(
         req.params as TRequestReplyCommentUpdateDto,
       ),
-      req.user.id as string,
+      req.user?.id as string,
     );
     return res.status(StatusCodes.OK).json({
       message: '대댓글 삭제 완료.',
