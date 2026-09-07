@@ -94,7 +94,7 @@ export default async function AuthMiddleware(
           });
         }
 
-        req.user = user;
+        req.user = user as Express.User;
 
         await redis.setex(
           `${TYPE.PrefixType.USERS}:REQUEST:id=${decodePayload.id}`,

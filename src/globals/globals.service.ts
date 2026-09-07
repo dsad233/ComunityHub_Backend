@@ -51,6 +51,7 @@ export class GlobalsService {
       likes: await this.globalsRepository.todayLikes(),
     };
 
+    // 30분 캐시 처리
     // await this.redisService.setex(
     //   `${PrefixType.CACHED}:${PrefixType.TODAY}:${PrefixType.NEW}:${PrefixType.COUNT}`,
     //   1800,
@@ -104,6 +105,7 @@ export class GlobalsService {
       });
     }
 
+    // 30분
     // await this.redisService.setex(
     //   `${PrefixType.CACHED}:${PrefixType.POPULAR}:${PrefixType.USERS}`,
     //   1800,

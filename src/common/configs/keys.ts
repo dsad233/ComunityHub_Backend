@@ -89,7 +89,7 @@ export const JWT_GUEST_ACCESS_TTL = checkEnvironment(
 export const REDIS_HOST = checkEnvironment('REDIS_HOST') as string;
 export const REDIS_PORT = checkEnvironment('REDIS_PORT') as number;
 export const REDIS_PASS = checkEnvironment('REDIS_PASS') as string;
-export const REDIS_DB = checkEnvironment('REDIS_DB') as string;
+export const REDIS_DB = checkEnvironment('REDIS_DB') as number;
 
 /**
  * NodeMailer
@@ -106,7 +106,9 @@ export const GOOGLE_CLIENT_ID = checkEnvironment('GOOGLE_CLIENT_ID') as string;
 export const GOOGLE_CLIENT_SECRET_KEY = checkEnvironment(
   'GOOGLE_CLIENT_SECRET_KEY',
 ) as string;
-export const GOOGLE_CALLBACK_URL = checkEnvironment('GOOGLE_CALLBACK_URL');
+export const GOOGLE_CALLBACK_URL = checkEnvironment(
+  'GOOGLE_CALLBACK_URL',
+) as string;
 export const GOOGLE_LOGIN_SUCCESS_REDIRECT_URL = checkEnvironment(
   'GOOGLE_LOGIN_SUCCESS_REDIRECT_URL',
 ) as string;
