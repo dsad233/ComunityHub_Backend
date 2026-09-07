@@ -1,4 +1,4 @@
-import { PrismaClient } from '../../generated/prisma/client';
+import { PrismaClient, Type } from '../../generated/prisma/client';
 import {
   TCreateCommentDto,
   TRequestReplyCommentCreateDto,
@@ -22,7 +22,7 @@ export class CommentsRepository {
     await this.prisma.comment.create({
       data: {
         context: body.context,
-        type: 'COMMENT',
+        type: Type.COMMENT,
         postId: id,
         userId: userId,
       },
@@ -40,7 +40,7 @@ export class CommentsRepository {
         postId: params.id,
         userId: userId,
         context: body.context,
-        type: 'REPLY',
+        type: Type.REPLY,
         parentId: params.parentId,
       },
     });
@@ -74,7 +74,7 @@ export class CommentsRepository {
       where: {
         postId: id,
         id: parentId,
-        type: 'COMMENT',
+        type: Type.COMMENT,
         parentId: null,
         deletedAt: 'FALSE',
       },
@@ -95,7 +95,7 @@ export class CommentsRepository {
         postId: params.id,
         id: params.commentId,
         userId: userId,
-        type: 'COMMENT',
+        type: Type.COMMENT,
         parentId: null,
         deletedAt: 'FALSE',
       },
@@ -117,7 +117,7 @@ export class CommentsRepository {
         id: params.replyId,
         parentId: params.parentId,
         userId: userId,
-        type: 'REPLY',
+        type: Type.REPLY,
         deletedAt: 'FALSE',
       },
       data: {
@@ -136,7 +136,7 @@ export class CommentsRepository {
         postId: params.id,
         id: params.commentId,
         userId: userId,
-        type: 'COMMENT',
+        type: Type.COMMENT,
         parentId: null,
         deletedAt: 'FALSE',
       },
@@ -157,7 +157,7 @@ export class CommentsRepository {
         id: params.replyId,
         parentId: params.parentId,
         userId: userId,
-        type: 'REPLY',
+        type: Type.REPLY,
         deletedAt: 'FALSE',
       },
       data: {
