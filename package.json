@@ -4,6 +4,7 @@
   "main": "./src/main.ts",
   "license": "MIT",
   "scripts": {
+    "local": "cross-env NODE_ENV=local tsc ./src/main.ts",
     "dev": "cross-env NODE_ENV=dev tsx ./src/main.ts",
     "start": "pnpm run lint && cross-env NODE_ENV=prod tsx ./src/main.ts",
     "build": "tsc --build",
