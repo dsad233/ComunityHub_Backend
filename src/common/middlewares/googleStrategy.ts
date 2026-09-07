@@ -84,7 +84,7 @@ export function GoogleStrategy(): Strategy {
         const user = await getUser(alreadyUserId.userId);
 
         if (user) {
-          return cb(null, user);
+          return cb(null, user as Express.User);
         }
       } else if (
         alreadyUserId &&
@@ -92,10 +92,10 @@ export function GoogleStrategy(): Strategy {
       ) {
         return cb(null, {
           deletedAt: State.TRUE,
-        });
+        } as Express.User);
       }
 
-      return cb(null, session);
+      return cb(null, session as Express.User);
     },
   );
 }

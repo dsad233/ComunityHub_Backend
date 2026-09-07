@@ -70,7 +70,7 @@ export class UsersController {
     return res.status(StatusCodes.OK).json({
       message: '유저 정보 조회 완료.',
       data: await this.usersService.userInfo(
-        await RequestUserDto(req.user.id as string),
+        await RequestUserDto(req.user?.id as string),
       ),
     });
   };
@@ -83,7 +83,7 @@ export class UsersController {
     return res.status(StatusCodes.OK).json({
       message: '받은 좋아요 수 조회 완료.',
       count: await this.usersService.receiveLikes(
-        await RequestUserDto(req.user.id as string),
+        await RequestUserDto(req.user?.id as string),
       ),
     });
   };
@@ -125,7 +125,7 @@ export class UsersController {
     return res.status(StatusCodes.OK).json({
       message: '작성한 게시글 목록 조회 완료.',
       data: await this.usersService.writeUserPosts(
-        await RequestUserDto(req.user.id as string),
+        await RequestUserDto(req.user?.id as string),
         await PaginationDto({
           page: req.query.page as string,
           pages: req.query.pages as string,
@@ -176,7 +176,7 @@ export class UsersController {
     return res.status(StatusCodes.OK).json({
       message: '작성한 댓글 목록 조회 완료.',
       data: await this.usersService.writeUserComments(
-        (await RequestUserDto(req.user.id as string)).id,
+        (await RequestUserDto(req.user?.id as string)).id,
         await PaginationDto({
           page: req.query.page as string,
           pages: req.query.pages as string,
@@ -206,7 +206,7 @@ export class UsersController {
     return res.status(StatusCodes.OK).json({
       message: '유저 기존 프로필 정보 조회 완료.',
       data: await this.usersService.getExistingProfileInfo(
-        (await RequestUserDto(req.user.id as string)).id,
+        (await RequestUserDto(req.user?.id as string)).id,
       ),
     });
   };
@@ -236,7 +236,7 @@ export class UsersController {
     return res.status(StatusCodes.OK).json({
       message: '유저 기존 정보 조회 완료.',
       data: await this.usersService.getExistingInfo(
-        (await RequestUserDto(req.user.id as string)).id,
+        (await RequestUserDto(req.user?.id as string)).id,
       ),
     });
   };
@@ -247,7 +247,7 @@ export class UsersController {
     res: Response,
   ): Promise<Response<{ message: string }>> => {
     await this.usersService.prifileUpdate(
-      (await RequestUserDto(req.user.id as string)).id,
+      (await RequestUserDto(req.user?.id as string)).id,
       await UpdateProfileDto(req.body as TUpdateProfileDto),
     );
     return res.status(StatusCodes.OK).json({
@@ -261,7 +261,7 @@ export class UsersController {
     res: Response,
   ): Promise<Response<{ message: string }>> => {
     await this.usersService.update(
-      (await RequestUserDto(req.user.id as string)).id,
+      (await RequestUserDto(req.user?.id as string)).id,
       await UpdateUserDto(req.body as TUpdateUserDto),
     );
     return res.status(StatusCodes.OK).json({
@@ -275,7 +275,7 @@ export class UsersController {
     res: Response,
   ): Promise<Response<{ message: string }>> => {
     await this.usersService.remove(
-      (await RequestUserDto(req.user.id as string)).id,
+      (await RequestUserDto(req.user?.id as string)).id,
     );
     return res.status(StatusCodes.OK).json({
       message: '회원 탈퇴 완료.',
