@@ -14,6 +14,7 @@ import { GoogleStrategy } from './common/middlewares/googleStrategy';
 import { NODE_ENV, RUNNING_PORT } from './common/configs/keys';
 import helmet from 'helmet';
 import { rateLimitConfig } from './common/middlewares/rateLimitConfig';
+import { CronController } from './cron/cron.controller';
 
 const app: Express = express();
 const port: number = RUNNING_PORT;
@@ -31,6 +32,9 @@ if (NODE_ENV === 'prod') {
   // 프록시 설정
   app.set('trust proxy', true);
 }
+
+// cron controller
+CronController();
 
 // MongoDB 설정
 MongoDBConfig();
