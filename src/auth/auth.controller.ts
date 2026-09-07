@@ -1,5 +1,5 @@
 import { AuthService } from './auth.service';
-import { NextFunction, Request, Response } from 'express';
+import { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import {
   CertifiEmailDto,
@@ -17,6 +17,7 @@ import {
   GOOGLE_SIGNUP_SUCCESS_REDIRECT_URL,
 } from '../common/configs/keys';
 import { State } from '../../generated/prisma/enums';
+import { TReqUser, TSignUpGoogleReqUser } from '../common/libs/type';
 
 export class AuthController {
   private readonly authService: AuthService;
@@ -25,7 +26,7 @@ export class AuthController {
     this.authService = authService;
   }
 
-  // 로그인 아이디 유무 확인
+  // 로그인 아이디 유무 확인 및 유효성 검사
   checkLoginId = async (
     req: Request,
     res: Response,
@@ -35,7 +36,7 @@ export class AuthController {
     });
   };
 
-  // 이메일 유무 확인
+  // 이메일 유무 확인 및 유효성 검사
   checkEmail = async (
     req: Request,
     res: Response,
@@ -45,7 +46,7 @@ export class AuthController {
     });
   };
 
-  // 닉네임 유무 확인
+  // 닉네임 유무 확인 및 유효성 검사
   checkNickname = async (
     req: Request,
     res: Response,
@@ -57,11 +58,20 @@ export class AuthController {
     });
   };
 
+  // 이름 유효성 검사
+  checkName = async (
+    req: Request,
+    res: Response,
+  ): Promise<Response<{ message: string; data: boolean }>> => {
+    return res.status(StatusCodes.OK).json({
+      verify: await this.authService.checkName(req.query.name as string),
+    });
+  };
+
   // 유저 생성
   signUp = async (
     req: Request,
     res: Response,
-    next: NextFunction,
   ): Promise<Response<{ message: string }>> => {
     await this.authService.signUp(await CreateUserDto(req.body));
 
@@ -72,7 +82,6 @@ export class AuthController {
   verifyEmail = async (
     req: Request,
     res: Response,
-    next: NextFunction,
   ): Promise<Response<{ message: string }>> => {
     await this.authService.verifyEmail(
       (await CertifiEmailDto(req.query.email as string)).email,
@@ -85,7 +94,6 @@ export class AuthController {
   signIn = async (
     req: Request,
     res: Response,
-    next: NextFunction,
   ): Promise<
     Response<{
       message: string;
@@ -104,9 +112,8 @@ export class AuthController {
   signOut = async (
     req: Request,
     res: Response,
-    next: NextFunction,
   ): Promise<Response<{ message: string }>> => {
-    await this.authService.signOut(req.user.id);
+    await this.authService.signOut(req.user?.id as string);
     return res.status(StatusCodes.OK).json({ message: '로그아웃 완료.' });
   };
 
@@ -114,7 +121,6 @@ export class AuthController {
   reissue = async (
     req: Request,
     res: Response,
-    next: NextFunction,
   ): Promise<Response<{ message: string }>> => {
     const { refreshToken } = req.body;
 
@@ -129,7 +135,6 @@ export class AuthController {
   updatePassword = async (
     req: Request,
     res: Response,
-    next: NextFunction,
   ): Promise<Response<{ message: string }>> => {
     await this.authService.updatePassword(
       await UpdatePasswordRequestDto(req.query as TUpdatePasswordRequestDto),
@@ -143,7 +148,6 @@ export class AuthController {
   certifiEmail = async (
     req: Request,
     res: Response,
-    next: NextFunction,
   ): Promise<Response<{ message: string }>> => {
     await this.authService.certifiEmail(
       (await CertifiEmailDto(req.body.email)).email,
@@ -156,7 +160,6 @@ export class AuthController {
   authenticationEmail = async (
     req: Request,
     res: Response,
-    next: NextFunction,
   ): Promise<Response<{ message: string }>> => {
     const token = await this.authService.authenticationEmail(
       (await CertifiEmailDto(req.body.email)).email,
@@ -175,8 +178,8 @@ export class AuthController {
   // Google 로그인 요청
   googleCallback = async (req: Request, res: Response): Promise<void> => {
     // 이미 회원 가입 이력이 있을 시에, 로그인 처리
-    if (req.user.id) {
-      const tokens = await this.authService.googleSignIn(req.user);
+    if (req.user?.id) {
+      const tokens = await this.authService.googleSignIn(req.user as TReqUser);
       res.redirect(
         GOOGLE_LOGIN_SUCCESS_REDIRECT_URL +
           `?res_ack=${tokens.access_token}&res_ref=${tokens.refresh_token}`,
@@ -196,9 +199,9 @@ export class AuthController {
     }
 
     // 구글 계정으로 회원 가입 진행 처리
-    await this.authService.googleSignUp(req.user);
+    await this.authService.googleSignUp(req.user as TSignUpGoogleReqUser);
     res.redirect(
-      GOOGLE_SIGNUP_SUCCESS_REDIRECT_URL + `?email=${req.user.email}`,
+      GOOGLE_SIGNUP_SUCCESS_REDIRECT_URL + `?email=${req.user?.email}`,
     );
 
     return;
@@ -233,7 +236,7 @@ export class AuthController {
     res: Response,
   ): Promise<Response<{ message: string }>> => {
     await this.authService.googleSocialLinkRegister(
-      req.user.id,
+      req.user?.id as string,
       req.body.email,
     );
 

@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@eslint/js':
+        specifier: ^10.0.1
+        version: 10.0.1(eslint@10.2.1(jiti@2.6.1))
       '@prisma/adapter-mariadb':
         specifier: ^7.2.0
         version: 7.6.0
@@ -23,6 +26,9 @@ importers:
       cors:
         specifier: ^2.8.6
         version: 2.8.6
+      cross-env:
+        specifier: ^10.1.0
+        version: 10.1.0
       dotenv:
         specifier: ^17.3.1
         version: 17.3.1
@@ -32,6 +38,9 @@ importers:
       express:
         specifier: ^5.2.1
         version: 5.2.1
+      express-rate-limit:
+        specifier: ^8.7.0
+        version: 8.7.0(express@5.2.1)
       googleapis:
         specifier: ^176.0.0
         version: 176.0.0
@@ -56,6 +65,9 @@ importers:
       morgan:
         specifier: ^1.10.1
         version: 1.10.1
+      node-cron:
+        specifier: ^4.6.0
+        version: 4.6.0
       nodemailer:
         specifier: ^8.0.7
         version: 8.0.7
@@ -169,6 +181,9 @@ packages:
   '@electric-sql/pglite@0.4.1':
     resolution: {integrity: sha512-mZ9NzzUSYPOCnxHH1oAHPRzoMFJHY472raDKwXl/+6oPbpdJ7g8LsCN4FSaIIfkiCKHhb3iF/Zqo3NYxaIhU7Q==}
 
+  '@epic-web/invariant@1.0.0':
+    resolution: {integrity: sha512-lrTPqgvfFQtR/eY/qkIzp98OGdNJu0m5ji3q/nJI8v3SXkRKEnWiOxMmbvcSoAIzv/cGiuvRy57k4suKQSAdwA==}
+
   '@eslint-community/eslint-utils@4.9.1':
     resolution: {integrity: sha512-phrYmNiYppR7znFEdqgfWHXR6NCkZEK7hwWDHZUjit/2/U0r6XvkDl0SYnoM51Hq7FhCGdLDT6zxCCOY1hexsQ==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
@@ -190,6 +205,15 @@ packages:
   '@eslint/core@1.2.1':
     resolution: {integrity: sha512-MwcE1P+AZ4C6DWlpin/OmOA54mmIZ/+xZuJiQd4SyB29oAJjN30UW9wkKNptW2ctp4cEsvhlLY/CsQ1uoHDloQ==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
+
+  '@eslint/js@10.0.1':
+    resolution: {integrity: sha512-zeR9k5pd4gxjZ0abRoIaxdc7I3nDktoXZk2qOv9gCNWx3mVwEn32VRhyLaRsDiJjTs0xq/T8mfPtyuXu7GWBcA==}
+    engines: {node: ^20.19.0 || ^22.13.0 || >=24}
+    peerDependencies:
+      eslint: ^10.0.0
+    peerDependenciesMeta:
+      eslint:
+        optional: true
 
   '@eslint/object-schema@3.0.5':
     resolution: {integrity: sha512-vqTaUEgxzm+YDSdElad6PiRoX4t8VGDjCtt05zn4nU810UIx/uNEV7/lZJ6KwFThKZOzOxzXy48da+No7HZaMw==}
@@ -775,6 +799,11 @@ packages:
   create-require@1.1.1:
     resolution: {integrity: sha512-dcKFX3jn0MpIaXjisoRvexIJVEKzaq7z2rZKxf+MSr9TkdmHmsU4m2lcLojrj/FHl8mk5VxMmYA+ftRkP/3oKQ==}
 
+  cross-env@10.1.0:
+    resolution: {integrity: sha512-GsYosgnACZTADcmEyJctkJIoqAhHjttw7RsFrVoJNXbsWWqaq6Ym+7kZjq6mS45O0jij6vtiReppKQEtqWy6Dw==}
+    engines: {node: '>=20'}
+    hasBin: true
+
   cross-spawn@7.0.6:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
     engines: {node: '>= 8'}
@@ -937,6 +966,12 @@ packages:
   etag@1.8.1:
     resolution: {integrity: sha512-aIL5Fx7mawVa300al2BnEE4iNvo1qETxLrPI/o05L7z6go7fCw1J6EQmbK4FmJ2AS7kgVF/KEZWufBfdClMcPg==}
     engines: {node: '>= 0.6'}
+
+  express-rate-limit@8.7.0:
+    resolution: {integrity: sha512-hOwV7WOxXfjRpAM1DSJWZDXx3GhplwD8IfwuwvogD8i1Qnkgosw/H45s4ZnFAUHDAhPjlY9hLBvJhKmGMyY26g==}
+    engines: {node: '>= 16'}
+    peerDependencies:
+      express: '>= 4.11'
 
   express@5.2.1:
     resolution: {integrity: sha512-hIS4idWWai69NezIdRt2xFVofaF4j+6INOpJlVOLDO8zXGpUVEVzIYk12UUi2JzjEzWL3IOAxcTubgz9Po0yXw==}
@@ -1153,6 +1188,10 @@ packages:
   ioredis@5.10.1:
     resolution: {integrity: sha512-HuEDBTI70aYdx1v6U97SbNx9F1+svQKBDo30o0b9fw055LMepzpOOd0Ccg9Q6tbqmBSJaMuY0fB7yw9/vjBYCA==}
     engines: {node: '>=12.22.0'}
+
+  ip-address@10.7.0:
+    resolution: {integrity: sha512-BGFsyJd5mpXp3rK6jIdADLNgpJUK1jnjzvYF8lK+VyDab9JAmqN0YOKDdP17HlgKb2+ehPgDc8EtnRLbGCAMhA==}
+    engines: {node: '>= 12'}
 
   ipaddr.js@1.9.1:
     resolution: {integrity: sha512-0KI/607xoxSToH7GjN1FfSbLoU0+btTicjsQSWQlh/hZykN8KpmMf7uYwPW3R+akZ6R/w18ZlXSHBYXiYUPO3g==}
@@ -1390,6 +1429,10 @@ packages:
   node-addon-api@8.7.0:
     resolution: {integrity: sha512-9MdFxmkKaOYVTV+XVRG8ArDwwQ77XIgIPyKASB1k3JPq3M8fGQQQE3YpMOrKm6g//Ktx8ivZr8xo1Qmtqub+GA==}
     engines: {node: ^18 || ^20 || >= 21}
+
+  node-cron@4.6.0:
+    resolution: {integrity: sha512-Si/bzYiKRHOB8/a99T2+SDGN582ONDMSTlJr5oCkT6GtnqPjZ2s10eoQRYkW9ZHwjVxONL+W8Fb+qR0AHMQsdg==}
+    engines: {node: '>=20'}
 
   node-domexception@1.0.0:
     resolution: {integrity: sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==}
@@ -1934,6 +1977,8 @@ snapshots:
 
   '@electric-sql/pglite@0.4.1': {}
 
+  '@epic-web/invariant@1.0.0': {}
+
   '@eslint-community/eslint-utils@4.9.1(eslint@10.2.1(jiti@2.6.1))':
     dependencies:
       eslint: 10.2.1(jiti@2.6.1)
@@ -1956,6 +2001,10 @@ snapshots:
   '@eslint/core@1.2.1':
     dependencies:
       '@types/json-schema': 7.0.15
+
+  '@eslint/js@10.0.1(eslint@10.2.1(jiti@2.6.1))':
+    optionalDependencies:
+      eslint: 10.2.1(jiti@2.6.1)
 
   '@eslint/object-schema@3.0.5': {}
 
@@ -2592,6 +2641,11 @@ snapshots:
 
   create-require@1.1.1: {}
 
+  cross-env@10.1.0:
+    dependencies:
+      '@epic-web/invariant': 1.0.0
+      cross-spawn: 7.0.6
+
   cross-spawn@7.0.6:
     dependencies:
       path-key: 3.1.1
@@ -2738,6 +2792,14 @@ snapshots:
   esutils@2.0.3: {}
 
   etag@1.8.1: {}
+
+  express-rate-limit@8.7.0(express@5.2.1):
+    dependencies:
+      debug: 4.4.3
+      express: 5.2.1
+      ip-address: 10.7.0
+    transitivePeerDependencies:
+      - supports-color
 
   express@5.2.1:
     dependencies:
@@ -3024,6 +3086,8 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  ip-address@10.7.0: {}
+
   ipaddr.js@1.9.1: {}
 
   is-extglob@2.1.1: {}
@@ -3240,6 +3304,8 @@ snapshots:
   negotiator@1.0.0: {}
 
   node-addon-api@8.7.0: {}
+
+  node-cron@4.6.0: {}
 
   node-domexception@1.0.0: {}
 

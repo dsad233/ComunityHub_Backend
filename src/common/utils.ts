@@ -1,6 +1,9 @@
 import bcrypt from 'bcrypt';
 import { BCYPT_PASSWORD_SALT } from './configs/keys';
-import { CategoryType } from './libs/type';
+import { AuthorityType, CategoryType } from './libs/type';
+import fs from 'fs';
+import path from 'path';
+import { Authority } from '../../generated/prisma/enums';
 
 /**
  * 패스워드 관련
@@ -163,7 +166,7 @@ export function categoryTranslate(category: string): {
   name: string;
 } {
   let transCategory: any = {};
-  for (let prop of Object.entries(CategoryType)) {
+  for (const prop of Object.entries(CategoryType)) {
     if (category === prop[0]) {
       transCategory['key'] = prop[0];
       transCategory['name'] = prop[1];
@@ -196,4 +199,23 @@ export function contextTranslate(html: string | null): string | null {
   }
 
   return contextStr;
+}
+
+/**
+ * 기타 함수 목록
+ */
+
+// 비속어 텍스트 목록
+export const filterTexts = fs.readFileSync(
+  path.join(__dirname, './filter_text.txt'),
+  'utf-8',
+) as string;
+
+// 권한명 번역 함수
+export function transRoleName(role: Authority): string | undefined {
+  for (const prop of Object.entries(AuthorityType)) {
+    if (prop[0] === role) {
+      return prop[1];
+    }
+  }
 }

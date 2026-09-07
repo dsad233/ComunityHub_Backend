@@ -30,6 +30,8 @@ router.get('/check/loginid', AsyncWrapper(authController.checkLoginId));
 router.get('/check/email', AsyncWrapper(authController.checkEmail));
 // 닉네임 유무 확인
 router.get('/check/nickname', AsyncWrapper(authController.checkNickname));
+// 이름 유효성 검사
+router.get('/check/name', AsyncWrapper(authController.checkName));
 // 회원가입
 router.post('/signup', AsyncWrapper(authController.signUp));
 // 유저 이메일 인증 여부 업데이트

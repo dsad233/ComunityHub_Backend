@@ -1,4 +1,11 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
+
+// 프로젝트 구동 환경 분리
+if (process.env.NODE_ENV === 'prod') {
+  dotenv.config({ path: process.cwd() + '/' + '.env.prod' });
+} else {
+  dotenv.config({ path: process.cwd() + '/' + '.env' });
+}
 
 export const NODE_ENV = String(process.env.NODE_ENV) || 'local';
 export const SERVER_URL = String(process.env.SERVER_URL);

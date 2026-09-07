@@ -41,7 +41,7 @@
     "moduleDetection": "force",
     "allowSyntheticDefaultImports": true
   },
-  "typeRoots": ["./@types", "./node_modules/@types"],
+  "typeRoots": ["./src/**/types","./node_modules/@types"],
   "include": ["src/**/*.ts", "main.ts"],
   "exclude": ["node_modules", "./dist"],
 }

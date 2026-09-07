@@ -9,9 +9,10 @@ import { prisma } from '../configs/prisma-client';
 import { redis } from '../../redis/redis.config';
 import { JWT_ACCESS_SECRET_KEY } from '../configs/keys';
 import { StatusCodes } from 'http-status-codes';
-import { Authority, Gender, State } from '../../../generated/prisma/enums';
+import { Authority } from '../../../generated/prisma/enums';
 import { TYPE } from '../libs';
 import { JwtPayload } from '../../jwt/jwt.service';
+import { TReqUser } from '../libs/type';
 
 export default async function AuthMiddleware(
   req: Request,
@@ -135,18 +136,7 @@ function checkTokenTypeRef(token: string[]): string | undefined {
 }
 
 // 유저 정보 반환
-async function getUser(payload: JwtPayload): Promise<{
-  id: string;
-  email: string;
-  loginId: string | null;
-  name: string | null;
-  nickname: string;
-  gender: Gender | null;
-  birthDay: Date | null;
-  phoneNumber: string | null;
-  isPublic: State;
-  verify: State;
-} | null> {
+async function getUser(payload: JwtPayload): Promise<TReqUser | null> {
   const prop = payload.email ? payload.email : payload.loginId;
 
   if (!payload || !prop) {

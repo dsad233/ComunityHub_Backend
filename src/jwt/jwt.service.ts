@@ -27,7 +27,7 @@ export type JwtPayload = {
 export class JwtService {
   // 토큰 생성
   async sign(
-    payload: Object,
+    payload: object,
     secretKey: string,
     tokenType: string,
   ): Promise<string> {

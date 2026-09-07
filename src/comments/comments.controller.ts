@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response } from 'express';
 import { CommentsService } from './comments.service';
 import { StatusCodes } from 'http-status-codes';
 import {
@@ -24,7 +24,6 @@ export class CommentsController {
   create = async (
     req: Request,
     res: Response,
-    next: NextFunction,
   ): Promise<Response<{ message: string }>> => {
     await this.commentsService.create(
       await RequestCommentCreateDto(req.params.id as string),
@@ -40,7 +39,6 @@ export class CommentsController {
   replyCreate = async (
     req: Request,
     res: Response,
-    next: NextFunction,
   ): Promise<Response<{ message: string }>> => {
     await this.commentsService.replyCreate(
       await RequestReplyCommentCreateDto(
@@ -58,7 +56,6 @@ export class CommentsController {
   update = async (
     req: Request,
     res: Response,
-    next: NextFunction,
   ): Promise<Response<{ message: string }>> => {
     await this.commentsService.update(
       await RequestCommentUpdateDto(req.params as TRequestCommentUpdateDto),
@@ -74,7 +71,6 @@ export class CommentsController {
   replyUpdate = async (
     req: Request,
     res: Response,
-    next: NextFunction,
   ): Promise<Response<{ message: string }>> => {
     await this.commentsService.replyUpdate(
       await RequestReplyCommentUpdateDto(
@@ -92,7 +88,6 @@ export class CommentsController {
   remove = async (
     req: Request,
     res: Response,
-    next: NextFunction,
   ): Promise<Response<{ message: string }>> => {
     await this.commentsService.remove(
       await RequestCommentUpdateDto(req.params as TRequestCommentUpdateDto),
@@ -107,7 +102,6 @@ export class CommentsController {
   replyRemove = async (
     req: Request,
     res: Response,
-    next: NextFunction,
   ): Promise<Response<{ message: string }>> => {
     await this.commentsService.replyRemove(
       await RequestReplyCommentUpdateDto(

@@ -7,7 +7,12 @@ import {
 } from 'http-errors';
 import { AuthRepository } from './auth.repository';
 import { RedisService } from '../redis/redis.service';
-import { comparePassword, randomConst, regEx } from '../common/utils';
+import {
+  comparePassword,
+  filterTexts,
+  randomConst,
+  regEx,
+} from '../common/utils';
 import {
   OmitTCreateUserDto,
   TAuthEmailDto,
@@ -26,7 +31,7 @@ import {
 } from '../common/configs/keys';
 import { TYPE } from '../common/libs';
 import { MailerService } from '../mailer/mailer.service';
-import { Gender, Provider, State } from '../../generated/prisma/enums';
+import { Provider, State } from '../../generated/prisma/enums';
 import crypto from 'crypto';
 import {
   adjectives,
@@ -34,6 +39,7 @@ import {
   uniqueNamesGenerator,
 } from 'unique-names-generator';
 import { google } from 'googleapis';
+import { TReqUser, TSignUpGoogleReqUser } from '../common/libs/type';
 
 export class AuthService {
   private readonly authRepository: AuthRepository;
@@ -60,6 +66,11 @@ export class AuthService {
       return false;
     }
 
+    // 비속어 필터링
+    if (filterTexts.includes(loginId)) {
+      return false;
+    }
+
     return true;
   };
 
@@ -71,14 +82,34 @@ export class AuthService {
       return false;
     }
 
+    // 비속어 필터링
+    if (filterTexts.includes(email.slice(0, email.indexOf('@')))) {
+      return false;
+    }
+
     return true;
   };
 
   // 닉네임 유무 확인
-  checkNickname = async (email: string): Promise<boolean> => {
-    const alreadyNickname = await this.authRepository.existNickname(email);
+  checkNickname = async (nickname: string): Promise<boolean> => {
+    const alreadyNickname = await this.authRepository.existNickname(nickname);
 
     if (alreadyNickname) {
+      return false;
+    }
+
+    // 비속어 필터링
+    if (filterTexts.includes(nickname)) {
+      return false;
+    }
+
+    return true;
+  };
+
+  // 이름 유효성 검사
+  checkName = async (name: string): Promise<boolean> => {
+    // 비속어 필터링
+    if (filterTexts.includes(name)) {
       return false;
     }
 
@@ -462,12 +493,7 @@ export class AuthService {
    */
 
   // Google 회원가입 요청
-  googleSignUp = async (googleReqUser: {
-    email: string;
-    nickname: string;
-    accessToken: string;
-    email_verified: boolean;
-  }): Promise<void> => {
+  googleSignUp = async (googleReqUser: TSignUpGoogleReqUser): Promise<void> => {
     const alreadyAccount = await this.authRepository.getAccountTypeUserId(
       googleReqUser.email,
     );
@@ -493,18 +519,9 @@ export class AuthService {
   };
 
   // Google 로그인 요청
-  googleSignIn = async (googleReqUser: {
-    id: string;
-    email: string;
-    loginId: string | null;
-    name: string | null;
-    nickname: string;
-    gender: Gender | null;
-    birthDay: Date | null;
-    phoneNumber: string | null;
-    isPublic: State;
-    verify: State;
-  }): Promise<{ access_token: string; refresh_token: string }> => {
+  googleSignIn = async (
+    googleReqUser: TReqUser,
+  ): Promise<{ access_token: string; refresh_token: string }> => {
     // 계정 타입 정보 조회
     const accountTypes = await this.authRepository.getAccountTypes(
       googleReqUser.id,

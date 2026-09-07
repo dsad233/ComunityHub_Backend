@@ -49,7 +49,7 @@ export class CategoriesService {
 
     let popularCategory = null;
 
-    for (let prop of Object.entries(CategoryType)) {
+    for (const prop of Object.entries(CategoryType)) {
       if (prop[0] === topPost[0]?.category) {
         popularCategory = prop[1];
       }

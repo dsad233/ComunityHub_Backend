@@ -49,7 +49,7 @@ export class CategoriesRepository {
   ): Promise<
     {
       _id: Types.UUID;
-      count: BigInt;
+      count: bigint;
     }[]
   > => {
     return await PostsSchema.find({ _id: { $in: postIds } })

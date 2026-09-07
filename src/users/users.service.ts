@@ -2,13 +2,17 @@ import { NotFound } from 'http-errors';
 import { UsersRepository } from './users.repository';
 import {
   Authority,
-  Category,
   Gender,
   Provider,
   State,
   Type,
 } from '../../generated/prisma/enums';
-import { categoryTranslate, dateFormat, parseCreatedAt } from '../common/utils';
+import {
+  categoryTranslate,
+  dateFormat,
+  parseCreatedAt,
+  transRoleName,
+} from '../common/utils';
 import {
   TRequestUseCommentDto,
   TRequestUsePostDto,
@@ -38,7 +42,7 @@ export class UsersService {
     verify: State;
     isPublic: State;
     createdAt: string;
-    roles: { authority: Authority } | null;
+    roles: { authority: string } | null;
     provider: Provider[];
     posts: Array<{
       id: string;
@@ -84,7 +88,9 @@ export class UsersService {
       verify: user.verify,
       isPublic: user.isPublic,
       createdAt: dateFormat(user.createdAt),
-      roles: user.roles,
+      roles: {
+        authority: transRoleName(user.roles?.authority as Authority) as string,
+      },
       provider: await this.usersRepository.getAccountType(id),
       posts: user.posts.map((post) => {
         return {

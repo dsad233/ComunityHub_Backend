@@ -1,11 +1,10 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response } from 'express';
 import { HttpError } from 'http-errors';
 import { StatusCodes } from 'http-status-codes';
 export default function ErrorMiddleware(
   error: HttpError,
   req: Request,
   res: Response,
-  next: NextFunction,
 ): Response<{ error: string }> {
   return res
     .status(error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR)

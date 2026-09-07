@@ -90,7 +90,7 @@ export class GlobalsService {
       role: Authority;
     }[] = [];
 
-    for (let prop of topUsers) {
+    for (const prop of topUsers) {
       result.push({
         nickname: prop.deletedAt !== State.TRUE ? prop.nickname : '탈퇴 유저',
         posts:
@@ -99,7 +99,7 @@ export class GlobalsService {
               `${PrefixType.COUNT}:${PrefixType.POPULAR}:${PrefixType.POSTS}`,
               prop.id,
             ),
-          ) ?? 0,
+          ) || 0,
         role: prop.roles?.authority ?? Authority.USER,
       });
     }

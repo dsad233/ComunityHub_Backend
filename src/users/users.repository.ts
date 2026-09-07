@@ -238,7 +238,7 @@ export class UsersRepository {
       };
     }[]
   > => {
-    const where: any = {
+    const where: Record<string, any> = {
       userId: id,
       deletedAt: 'FALSE',
     };
@@ -264,7 +264,7 @@ export class UsersRepository {
       where['isPublic'] = 'FALSE';
     }
 
-    let orderBy: any = {};
+    let orderBy: Record<string, any> = {};
 
     if (query.orderBy === OrderByStatus.NEW) {
       orderBy['createdAt'] = 'desc';
@@ -394,7 +394,7 @@ export class UsersRepository {
 
   // 유저가 작성한 모든 댓글 갯수
   writeCountComments = async (id: string, type: string) => {
-    const where: any = {
+    const where: Record<string, any> = {
       userId: id,
     };
 
@@ -475,7 +475,7 @@ export class UsersRepository {
       };
     }[]
   > => {
-    const where: any = {
+    const where: Record<string, any> = {
       userId: id,
       deletedAt: 'FALSE',
     };
@@ -505,7 +505,7 @@ export class UsersRepository {
       where['type'] = 'REPLY';
     }
 
-    const orderBy: any = {};
+    const orderBy: Record<string, any> = {};
 
     if (query.orderBy === OrderByStatus.NEW) {
       orderBy['createdAt'] = 'desc';
@@ -644,7 +644,7 @@ export class UsersRepository {
         deletedAt: 'FALSE',
       },
       data: {
-        name: body.name,
+        name: body.name as string,
         nickname: body.nickname,
         gender: body.gender as Gender,
         birthDay: body.birthDay as Date,

@@ -1,8 +1,8 @@
-import { NextFunction, Request, Response } from 'express';
+import { Request, Response } from 'express';
 import { PostsService } from './posts.service';
 import { StatusCodes } from 'http-status-codes';
 import { CreatePostDto } from './dto/createPostDto';
-import { TPaginationDto, PaginationDto } from '../common/dto/paginationDto';
+import { PaginationDto } from '../common/dto/paginationDto';
 import { RequestPostDto } from './dto/requestPostDto';
 import { Category, State, Type } from '../../generated/prisma/enums';
 import { TUpdatePostDto, UpdatePostDto } from './dto/updatePostDto';
@@ -17,9 +17,11 @@ export class PostsController {
   create = async (
     req: Request,
     res: Response,
-    next: NextFunction,
   ): Promise<Response<{ message: string }>> => {
-    await this.postsService.create(req.user.id, await CreatePostDto(req.body));
+    await this.postsService.create(
+      req.user?.id as string,
+      await CreatePostDto(req.body),
+    );
 
     return res
       .status(StatusCodes.CREATED)
@@ -33,7 +35,10 @@ export class PostsController {
   ): Promise<
     Response<{
       message: string;
-      data: Array<Object>;
+      data: Array<{
+        key: string;
+        name: string;
+      }>;
     }>
   > => {
     return res.status(StatusCodes.OK).json({
@@ -163,7 +168,7 @@ export class PostsController {
       message: '게시글 상세 조회 완료.',
       data: await this.postsService.findOne(
         req.params.id as string,
-        req.user?.id,
+        req.user?.id as string,
         req.ip ?? (req.ips[0] as string),
       ),
     });
@@ -173,7 +178,6 @@ export class PostsController {
   getExistingPostInfo = async (
     req: Request,
     res: Response,
-    next: NextFunction,
   ): Promise<
     Response<{
       message: string;
@@ -190,7 +194,7 @@ export class PostsController {
       message: '기존 게시글 정보 조회 완료.',
       data: await this.postsService.getExistingPostInfo(
         req.params.id as string,
-        req.user.id as string,
+        req.user?.id as string,
       ),
     });
   };
@@ -199,7 +203,6 @@ export class PostsController {
   update = async (
     req: Request,
     res: Response,
-    next: NextFunction,
   ): Promise<
     Response<{
       message: string;
@@ -207,7 +210,7 @@ export class PostsController {
   > => {
     await this.postsService.update(
       req.params.id as string,
-      req.user.id as string,
+      req.user?.id as string,
       await UpdatePostDto(req.body as TUpdatePostDto),
     );
 
@@ -220,7 +223,6 @@ export class PostsController {
   remove = async (
     req: Request,
     res: Response,
-    next: NextFunction,
   ): Promise<
     Response<{
       message: string;
@@ -228,7 +230,7 @@ export class PostsController {
   > => {
     await this.postsService.remove(
       req.params.id as string,
-      req.user.id as string,
+      req.user?.id as string,
     );
 
     return res.status(StatusCodes.OK).json({
