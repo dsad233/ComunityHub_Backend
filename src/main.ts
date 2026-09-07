@@ -13,6 +13,7 @@ import passport from 'passport';
 import { GoogleStrategy } from './common/middlewares/googleStrategy';
 import { NODE_ENV, RUNNING_PORT } from './common/configs/keys';
 import helmet from 'helmet';
+import { rateLimitConfig } from './common/middlewares/rateLimitConfig';
 
 const app: Express = express();
 const port: number = RUNNING_PORT;
@@ -23,7 +24,10 @@ app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 app.use(CorsConfig());
 if (NODE_ENV === 'prod') {
+  // http header 보안 설정
   app.use(helmet());
+  // rate limit 설정
+  app.use(rateLimitConfig());
   // 프록시 설정
   app.set('trust proxy', true);
 }
