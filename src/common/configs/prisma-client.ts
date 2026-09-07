@@ -9,7 +9,7 @@ import {
   DB_PORT,
   DB_USER,
   DB_IDLE_TIMEOUT,
-  DB_PUBLICKEYRETRIEVAL,
+  DB_PUBLIC_KEY_RETRIEVAL,
   DB_USESSL,
 } from './keys';
 import { PrismaClient } from '../../../generated/prisma/client';
@@ -24,7 +24,7 @@ const adapter = new PrismaMariaDb({
   acquireTimeout: DB_POOL_TIMEOUT,
   connectTimeout: DB_CONNECT_TIMEOUT,
   idleTimeout: DB_IDLE_TIMEOUT,
-  allowPublicKeyRetrieval: DB_PUBLICKEYRETRIEVAL,
+  allowPublicKeyRetrieval: DB_PUBLIC_KEY_RETRIEVAL,
   ssl: DB_USESSL,
   logger: {
     error: (error) => {

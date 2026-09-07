@@ -157,6 +157,19 @@ export function parseCreatedAt(startDate: Date, endDate: Date): string {
 }
 
 /**
+ * 유저 관련 함수
+ */
+
+// 권한명 번역 함수
+export function transRoleName(role: Authority): string | undefined {
+  for (const prop of Object.entries(AuthorityType)) {
+    if (prop[0] === role) {
+      return prop[1];
+    }
+  }
+}
+
+/**
  * 게시글 관련 함수
  */
 
@@ -211,11 +224,25 @@ export const filterTexts = fs.readFileSync(
   'utf-8',
 ) as string;
 
-// 권한명 번역 함수
-export function transRoleName(role: Authority): string | undefined {
-  for (const prop of Object.entries(AuthorityType)) {
-    if (prop[0] === role) {
-      return prop[1];
-    }
+// 환경 변수 유무 검증 함수
+export function checkEnvironment(key: string): string | number | boolean {
+  if (!process.env[key]) {
+    throw new Error(`환경 변수 ${key}가 존재하지 않습니다.`);
   }
+
+  if (process.env[key] === 'null') {
+    return '';
+  }
+
+  if (Number(process.env[key])) {
+    return Number(process.env[key]);
+  }
+
+  if (process.env[key] === 'true') {
+    return true;
+  } else if (process.env[key] === 'false') {
+    return false;
+  }
+
+  return String(process.env[key]);
 }
