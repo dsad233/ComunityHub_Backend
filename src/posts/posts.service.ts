@@ -134,10 +134,10 @@ export class PostsService {
         postIds,
       );
 
-      // 캐쉬 미히트시 캐쉬 적제 (30분)
+      // 캐쉬 미히트시 캐쉬 적제 (10분)
       // await this.redisService.setex(
       //   `${PrefixType.CACHED}:${PrefixType.POSTS}:page=${paginations.page}`,
-      //   1800,
+      //   600,
       //   JSON.stringify(posts),
       // );
 
@@ -173,10 +173,10 @@ export class PostsService {
 
     const posts = await this.postsRepository.find(paginations, query, null);
 
-    // 캐쉬 미히트시 캐쉬 적제 (30분)
+    // 캐쉬 미히트시 캐쉬 적제 (10분)
     // await this.redisService.setex(
     //   `${PrefixType.CACHED}:${PrefixType.POSTS}:page=${paginations.page}`,
-    //   1800,
+    //   600,
     //   JSON.stringify(posts),
     // );
 
