@@ -89,7 +89,7 @@ export class UsersRepository {
     };
   } | null> => {
     return await this.prisma.user.findFirst({
-      where: { id: id, deletedAt: 'FALSE' },
+      where: { id: id, deletedAt: State.FALSE },
       select: {
         id: true,
         email: true,
@@ -104,7 +104,7 @@ export class UsersRepository {
         },
         posts: {
           where: {
-            deletedAt: 'FALSE',
+            deletedAt: State.FALSE,
           },
           select: {
             id: true,
@@ -115,7 +115,7 @@ export class UsersRepository {
               select: {
                 comments: {
                   where: {
-                    deletedAt: 'FALSE',
+                    deletedAt: State.FALSE,
                   },
                 },
                 likes: true,
@@ -130,7 +130,7 @@ export class UsersRepository {
         comments: {
           where: {
             userId: id,
-            deletedAt: 'FALSE',
+            deletedAt: State.FALSE,
           },
           select: {
             id: true,
@@ -153,12 +153,12 @@ export class UsersRepository {
           select: {
             posts: {
               where: {
-                deletedAt: 'FALSE',
+                deletedAt: State.FALSE,
               },
             },
             comments: {
               where: {
-                deletedAt: 'FALSE',
+                deletedAt: State.FALSE,
               },
             },
           },
@@ -173,7 +173,7 @@ export class UsersRepository {
       await this.prisma.post.findMany({
         where: {
           userId: id,
-          deletedAt: 'FALSE',
+          deletedAt: State.FALSE,
         },
         select: {
           id: true,
@@ -199,7 +199,7 @@ export class UsersRepository {
       where: {
         userId: id,
         category: category as Category,
-        deletedAt: 'FALSE',
+        deletedAt: State.FALSE,
       },
     });
   };
@@ -210,7 +210,7 @@ export class UsersRepository {
       where: {
         userId: id,
         isPublic: status,
-        deletedAt: 'FALSE',
+        deletedAt: State.FALSE,
       },
     });
   };
@@ -240,7 +240,7 @@ export class UsersRepository {
   > => {
     const where: Record<string, any> = {
       userId: id,
-      deletedAt: 'FALSE',
+      deletedAt: State.FALSE,
     };
 
     if (query.search) {
@@ -259,9 +259,9 @@ export class UsersRepository {
     } else if (query.category) {
       where['category'] = query.category;
     } else if (query.isPublic === IsPublicStatus.PUBLIC) {
-      where['isPublic'] = 'TRUE';
+      where['isPublic'] = State.TRUE;
     } else if (query.isPublic === IsPublicStatus.PRIVATE) {
-      where['isPublic'] = 'FALSE';
+      where['isPublic'] = State.FALSE;
     }
 
     let orderBy: Record<string, any> = {};
@@ -298,7 +298,7 @@ export class UsersRepository {
           select: {
             comments: {
               where: {
-                deletedAt: 'FALSE',
+                deletedAt: State.FALSE,
               },
             },
             likes: true,
@@ -392,7 +392,7 @@ export class UsersRepository {
     });
   };
 
-  // 유저가 작성한 모든 댓글 갯수
+  // 유저가 작성한 모든 댓글 갯수 (정렬)
   writeCountComments = async (id: string, type: string) => {
     const where: Record<string, any> = {
       userId: id,
@@ -400,12 +400,13 @@ export class UsersRepository {
 
     if (type === CommentStatus.COMMENT) {
       where['parentId'] = null;
-      where['type'] = 'COMMENT';
+      where['type'] = Type.COMMENT;
     } else if (type === CommentStatus.REPLY) {
       where['parentId'] = {
         not: null,
       };
-      where['type'] = 'REPLY';
+      where['type'] = Type.REPLY;
+      where['deletedAt'] = State.FALSE;
     }
 
     return await this.prisma.comment.count({
@@ -432,7 +433,7 @@ export class UsersRepository {
             },
           },
         ],
-        deletedAt: 'FALSE',
+        deletedAt: State.FALSE,
       },
     });
   };
@@ -445,7 +446,8 @@ export class UsersRepository {
         parentId: {
           not: null,
         },
-        deletedAt: 'FALSE',
+        type: Type.REPLY,
+        deletedAt: State.FALSE,
       },
     });
   };
@@ -477,7 +479,7 @@ export class UsersRepository {
   > => {
     const where: Record<string, any> = {
       userId: id,
-      deletedAt: 'FALSE',
+      deletedAt: State.FALSE,
     };
 
     if (query.search) {
@@ -497,12 +499,12 @@ export class UsersRepository {
       ];
     } else if (query.type === CommentStatus.COMMENT) {
       where['parentId'] = null;
-      where['type'] = 'COMMENT';
+      where['type'] = Type.COMMENT;
     } else if (query.type === CommentStatus.REPLY) {
       where['parentId'] = {
         not: null,
       };
-      where['type'] = 'REPLY';
+      where['type'] = Type.REPLY;
     }
 
     const orderBy: Record<string, any> = {};
@@ -572,7 +574,7 @@ export class UsersRepository {
     return await this.prisma.user.findFirst({
       where: {
         id: id,
-        deletedAt: 'FALSE',
+        deletedAt: State.FALSE,
       },
       select: {
         id: true,
@@ -602,7 +604,7 @@ export class UsersRepository {
     return await this.prisma.user.findFirst({
       where: {
         id: id,
-        deletedAt: 'FALSE',
+        deletedAt: State.FALSE,
       },
       select: {
         id: true,
@@ -627,7 +629,7 @@ export class UsersRepository {
     await this.prisma.user.update({
       where: {
         id: id,
-        deletedAt: 'FALSE',
+        deletedAt: State.FALSE,
       },
       data: {
         nickname: body.nickname,
@@ -641,7 +643,7 @@ export class UsersRepository {
     await this.prisma.user.update({
       where: {
         id: id,
-        deletedAt: 'FALSE',
+        deletedAt: State.FALSE,
       },
       data: {
         name: body.name as string,
@@ -660,10 +662,10 @@ export class UsersRepository {
     await this.prisma.user.update({
       where: {
         id: id,
-        deletedAt: 'FALSE',
+        deletedAt: State.FALSE,
       },
       data: {
-        deletedAt: 'TRUE',
+        deletedAt: State.TRUE,
       },
     });
   };
@@ -678,7 +680,7 @@ export class UsersRepository {
     await this.prisma.image.create({
       data: {
         image: new Uint8Array(imageBuffer.buffer),
-        type: 'USER',
+        type: Type.USER,
         typeId: id,
       },
     });
@@ -693,7 +695,7 @@ export class UsersRepository {
   } | null> => {
     const image = await this.prisma.image.findFirst({
       where: {
-        type: 'USER',
+        type: Type.USER,
         typeId: id,
       },
       select: {
@@ -722,7 +724,7 @@ export class UsersRepository {
     await this.prisma.image.update({
       where: {
         id: imageId,
-        type: 'USER',
+        type: Type.USER,
         typeId: id,
       },
       data: {
@@ -736,7 +738,7 @@ export class UsersRepository {
     await this.prisma.image.delete({
       where: {
         id: imageId,
-        type: 'USER',
+        type: Type.USER,
         typeId: id,
       },
     });

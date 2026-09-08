@@ -1,4 +1,4 @@
-import { PrismaClient, Type } from '../../generated/prisma/client';
+import { PrismaClient, State, Type } from '../../generated/prisma/client';
 import {
   TCreateCommentDto,
   TRequestReplyCommentCreateDto,
@@ -55,7 +55,7 @@ export class CommentsRepository {
     return await this.prisma.post.findFirst({
       where: {
         id: id,
-        deletedAt: 'FALSE',
+        deletedAt: State.FALSE,
       },
       select: {
         id: true,
@@ -76,7 +76,7 @@ export class CommentsRepository {
         id: parentId,
         type: Type.COMMENT,
         parentId: null,
-        deletedAt: 'FALSE',
+        deletedAt: State.FALSE,
       },
       select: {
         id: true,
@@ -97,7 +97,7 @@ export class CommentsRepository {
         userId: userId,
         type: Type.COMMENT,
         parentId: null,
-        deletedAt: 'FALSE',
+        deletedAt: State.FALSE,
       },
       data: {
         context: body.context,
@@ -118,7 +118,7 @@ export class CommentsRepository {
         parentId: params.parentId,
         userId: userId,
         type: Type.REPLY,
-        deletedAt: 'FALSE',
+        deletedAt: State.FALSE,
       },
       data: {
         context: body.context,
@@ -138,10 +138,10 @@ export class CommentsRepository {
         userId: userId,
         type: Type.COMMENT,
         parentId: null,
-        deletedAt: 'FALSE',
+        deletedAt: State.FALSE,
       },
       data: {
-        deletedAt: 'TRUE',
+        deletedAt: State.TRUE,
       },
     });
   };
@@ -158,10 +158,10 @@ export class CommentsRepository {
         parentId: params.parentId,
         userId: userId,
         type: Type.REPLY,
-        deletedAt: 'FALSE',
+        deletedAt: State.FALSE,
       },
       data: {
-        deletedAt: 'TRUE',
+        deletedAt: State.TRUE,
       },
     });
   };

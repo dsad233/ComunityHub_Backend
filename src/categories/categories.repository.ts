@@ -1,5 +1,5 @@
 import type { Types } from 'mongoose';
-import { Category, PrismaClient } from '../../generated/prisma/client';
+import { Category, PrismaClient, State } from '../../generated/prisma/client';
 import { PostsSchema } from '../common/configs/mongodb.config';
 
 export class CategoriesRepository {
@@ -21,8 +21,8 @@ export class CategoriesRepository {
   > => {
     return await this.prisma.post.findMany({
       where: {
-        isPublic: 'TRUE',
-        deletedAt: 'FALSE',
+        isPublic: State.TRUE,
+        deletedAt: State.FALSE,
       },
       select: {
         id: true,

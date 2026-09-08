@@ -125,8 +125,8 @@ export class PostsRepository {
   // 게시글 수 조회
   countPosts = async (category: string): Promise<number> => {
     const where: Record<string, any> = {
-      isPublic: 'TRUE',
-      deletedAt: 'FALSE',
+      isPublic: State.TRUE,
+      deletedAt: State.FALSE,
     };
 
     if (category === Category.FREE) {
@@ -153,8 +153,8 @@ export class PostsRepository {
   > => {
     const counts = await this.prisma.post.groupBy({
       where: {
-        isPublic: 'TRUE',
-        deletedAt: 'FALSE',
+        isPublic: State.TRUE,
+        deletedAt: State.FALSE,
       },
       by: ['category'],
       _count: {
@@ -208,7 +208,10 @@ export class PostsRepository {
       };
     }[]
   > => {
-    let where: Record<string, any> = { isPublic: 'TRUE', deletedAt: 'FALSE' };
+    let where: Record<string, any> = {
+      isPublic: State.TRUE,
+      deletedAt: State.FALSE,
+    };
 
     // 게시글 제목, 내용, 작성자 검색
     if (query.search) {
@@ -253,7 +256,7 @@ export class PostsRepository {
     if (query.category) {
       where['category'] = query.category;
     } else if (query.isPublic === IsPublicStatus.PUBLIC) {
-      where['isPublic'] = 'TRUE';
+      where['isPublic'] = State.TRUE;
     }
     // 조회순으로 정렬
     if (postIds?.length && query.orderBy === OrderByStatus.VIEWS) {
@@ -296,7 +299,7 @@ export class PostsRepository {
           select: {
             comments: {
               where: {
-                deletedAt: 'FALSE',
+                deletedAt: State.FALSE,
               },
             },
             likes: true,
@@ -634,7 +637,7 @@ export class PostsRepository {
       where: {
         id: id,
         userId: userId,
-        deletedAt: 'FALSE',
+        deletedAt: State.FALSE,
       },
       select: {
         title: true,
@@ -682,10 +685,10 @@ export class PostsRepository {
       where: {
         id: id,
         userId: userId,
-        deletedAt: 'FALSE',
+        deletedAt: State.FALSE,
       },
       data: {
-        deletedAt: 'TRUE',
+        deletedAt: State.TRUE,
       },
     });
   };

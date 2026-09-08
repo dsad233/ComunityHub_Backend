@@ -78,7 +78,7 @@ export class LikesRepository {
     return await this.prisma.post.findFirst({
       where: {
         id: id,
-        deletedAt: 'FALSE',
+        deletedAt: State.FALSE,
       },
       select: {
         id: true,
@@ -94,7 +94,8 @@ export class LikesRepository {
       where: {
         postId: params.id,
         id: params.commentId,
-        deletedAt: 'FALSE',
+        type: Type.COMMENT,
+        deletedAt: State.FALSE,
       },
       select: {
         id: true,
@@ -111,7 +112,8 @@ export class LikesRepository {
         postId: params.id,
         id: params.replyId,
         parentId: params.commentId,
-        deletedAt: 'FALSE',
+        type: Type.REPLY,
+        deletedAt: State.FALSE,
       },
       select: {
         id: true,

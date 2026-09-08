@@ -105,7 +105,7 @@ async function getUser(userId: string): Promise<TReqUser | null> {
   const user = await prisma.user.findFirst({
     where: {
       id: userId,
-      deletedAt: 'FALSE',
+      deletedAt: State.FALSE,
     },
     select: {
       id: true,

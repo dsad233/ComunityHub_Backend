@@ -138,7 +138,7 @@ export class AuthRepository {
     return await this.prisma.user.findFirst({
       where: {
         email: email,
-        deletedAt: 'FALSE',
+        deletedAt: State.FALSE,
       },
       select: {
         id: true,
@@ -157,7 +157,7 @@ export class AuthRepository {
     verify: State;
   } | null> => {
     return await this.prisma.user.findFirst({
-      where: { email: email, deletedAt: 'FALSE' },
+      where: { email: email, deletedAt: State.FALSE },
       select: {
         id: true,
         email: true,
@@ -179,7 +179,7 @@ export class AuthRepository {
     return await this.prisma.user.findFirst({
       where: {
         loginId: loginId,
-        deletedAt: 'FALSE',
+        deletedAt: State.FALSE,
       },
       select: {
         id: true,
@@ -197,7 +197,7 @@ export class AuthRepository {
     return await this.prisma.user.findFirst({
       where: {
         email: email,
-        deletedAt: 'FALSE',
+        deletedAt: State.FALSE,
       },
       select: {
         id: true,
@@ -213,7 +213,7 @@ export class AuthRepository {
     return await this.prisma.user.findFirst({
       where: {
         loginId: loginId,
-        deletedAt: 'FALSE',
+        deletedAt: State.FALSE,
       },
       select: {
         id: true,
@@ -228,7 +228,7 @@ export class AuthRepository {
       where: {
         id: id,
         email: email,
-        deletedAt: 'FALSE',
+        deletedAt: State.FALSE,
       },
       data: {
         verify: State.TRUE,
@@ -246,7 +246,7 @@ export class AuthRepository {
       where: {
         id: id,
         email: email,
-        deletedAt: 'FALSE',
+        deletedAt: State.FALSE,
       },
       data: {
         password: await hashPassword(newPassword),

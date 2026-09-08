@@ -178,7 +178,7 @@ export class UsersService {
     };
   };
 
-  // 유저가 작성한 댓글 목록 조회
+  // 유저가 작성한 댓글 목록 조회 (정렬 고려)
   writeUserComments = async (
     id: string,
     paginations: TPaginationDto,

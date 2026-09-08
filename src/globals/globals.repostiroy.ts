@@ -1,4 +1,4 @@
-import { Authority, PrismaClient } from '../../generated/prisma/client';
+import { Authority, PrismaClient, State } from '../../generated/prisma/client';
 import { dateFormat } from '../common/utils';
 
 export class GlobalsRepository {
@@ -11,8 +11,8 @@ export class GlobalsRepository {
   countUsers = async (): Promise<number> => {
     return await this.prisma.user.count({
       where: {
-        isPublic: 'TRUE',
-        deletedAt: 'FALSE',
+        isPublic: State.TRUE,
+        deletedAt: State.FALSE,
       },
     });
   };
@@ -21,9 +21,9 @@ export class GlobalsRepository {
   countComments = async (): Promise<number> => {
     return await this.prisma.comment.count({
       where: {
-        deletedAt: 'FALSE',
+        deletedAt: State.FALSE,
         users: {
-          deletedAt: 'FALSE',
+          deletedAt: State.FALSE,
         },
       },
     });
@@ -34,7 +34,7 @@ export class GlobalsRepository {
     const today = new Date();
     return await this.prisma.user.count({
       where: {
-        isPublic: 'TRUE',
+        isPublic: State.TRUE,
         AND: [
           {
             createdAt: {
@@ -47,7 +47,7 @@ export class GlobalsRepository {
             },
           },
         ],
-        deletedAt: 'FALSE',
+        deletedAt: State.FALSE,
       },
     });
   };
@@ -57,7 +57,7 @@ export class GlobalsRepository {
     const today = new Date();
     return await this.prisma.post.count({
       where: {
-        isPublic: 'TRUE',
+        isPublic: State.TRUE,
         AND: [
           {
             createdAt: {
@@ -70,9 +70,9 @@ export class GlobalsRepository {
             },
           },
         ],
-        deletedAt: 'FALSE',
+        deletedAt: State.FALSE,
         users: {
-          deletedAt: 'FALSE',
+          deletedAt: State.FALSE,
         },
       },
     });
@@ -95,9 +95,9 @@ export class GlobalsRepository {
             },
           },
         ],
-        deletedAt: 'FALSE',
+        deletedAt: State.FALSE,
         users: {
-          deletedAt: 'FALSE',
+          deletedAt: State.FALSE,
         },
       },
     });
@@ -121,7 +121,7 @@ export class GlobalsRepository {
           },
         ],
         users: {
-          deletedAt: 'FALSE',
+          deletedAt: State.FALSE,
         },
       },
     });
@@ -145,8 +145,8 @@ export class GlobalsRepository {
         id: {
           in: userIds,
         },
-        isPublic: 'TRUE',
-        deletedAt: 'FALSE',
+        isPublic: State.TRUE,
+        deletedAt: State.FALSE,
       },
       select: {
         id: true,
