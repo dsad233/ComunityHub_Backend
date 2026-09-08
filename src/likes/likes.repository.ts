@@ -1,4 +1,4 @@
-import { PrismaClient, Type } from '../../generated/prisma/client';
+import { PrismaClient, State, Type } from '../../generated/prisma/client';
 import { TRequestCommentLikeDto, TRequestReplyLikeDto } from './dto';
 
 export class LikesRepository {
@@ -58,7 +58,7 @@ export class LikesRepository {
     return await this.prisma.like.findFirst({
       where: {
         postId: params.id,
-        commentId: params.commentId ?? undefined,
+        commentId: params.parentId ?? undefined,
         replyId: params.replyId ?? undefined,
         type: type,
         userId: userId,
@@ -123,14 +123,15 @@ export class LikesRepository {
 
   // 게시글 좋아요 삭제
   delete = async (
+    postId: string,
     id: string,
-    likeId: string,
     userId: string,
   ): Promise<void> => {
     await this.prisma.like.delete({
       where: {
-        postId: id,
-        id: likeId,
+        postId: postId,
+        id: id,
+        type: Type.POST,
         userId: userId,
       },
     });
@@ -139,14 +140,15 @@ export class LikesRepository {
   // 댓글 좋아요 삭제
   deleteComment = async (
     params: TRequestCommentLikeDto,
-    likeId: string,
+    id: string,
     userId: string,
   ): Promise<void> => {
     await this.prisma.like.delete({
       where: {
         postId: params.id,
         commentId: params.commentId,
-        id: likeId,
+        id: id,
+        type: Type.COMMENT,
         userId: userId,
       },
     });
@@ -155,7 +157,7 @@ export class LikesRepository {
   // 대댓글 좋아요 삭제
   deleteReply = async (
     params: TRequestReplyLikeDto,
-    likeId: string,
+    id: string,
     userId: string,
   ): Promise<void> => {
     await this.prisma.like.delete({
@@ -163,7 +165,8 @@ export class LikesRepository {
         postId: params.id,
         commentId: params.commentId,
         replyId: params.replyId,
-        id: likeId,
+        id: id,
+        type: Type.REPLY,
         userId: userId,
       },
     });
