@@ -149,6 +149,9 @@ export class PostsController {
           author:
             | { nickname: string; image: string | null; property: boolean }
             | undefined;
+          count: {
+            likes: number | undefined;
+          };
           replies:
             | {
                 id: string | null;
@@ -158,6 +161,9 @@ export class PostsController {
                 createdAt: string | null;
                 deletedAt: string;
                 author: { nickname: string; image: string | null };
+                count: {
+                  replyLikes: number | null;
+                };
               }[]
             | undefined;
         }[];

@@ -221,6 +221,9 @@ export class PostsService {
       author:
         | { nickname: string; image: string | null; property: boolean }
         | undefined;
+      count: {
+        likes: number | undefined;
+      };
       replies:
         | {
             id: string | null;
@@ -233,6 +236,9 @@ export class PostsService {
               nickname: string;
               image: string | null;
               property: boolean;
+            };
+            count: {
+              replyLikes: number | null;
             };
           }[]
         | undefined;
@@ -333,7 +339,10 @@ export class PostsService {
                 }
               : undefined,
             deletedAt: comment?.deletedAt,
-            replies: comment.replies.map((reply) => {
+            count: {
+              likes: notDeleted ? comment?._count?.likes || 0 : undefined,
+            },
+            replies: comment?.replies.map((reply) => {
               // 삭제된 댓글
               const notDeleted = reply?.deletedAt !== State.TRUE;
               // 탈퇴 유저
@@ -361,6 +370,11 @@ export class PostsService {
                   image: ifDeleteUser ? userImage : null,
                   property:
                     userId && userId === reply?.users?.id ? true : false,
+                },
+                count: {
+                  replyLikes: notDeleted
+                    ? reply?._count?.replyLikes || 0
+                    : null,
                 },
               };
             }),

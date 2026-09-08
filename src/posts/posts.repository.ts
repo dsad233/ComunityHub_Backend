@@ -487,6 +487,9 @@ export class PostsRepository {
         nickname: string;
         deletedAt: State;
       };
+      _count: {
+        likes: number;
+      };
       replies: {
         id: string;
         context: string;
@@ -499,14 +502,17 @@ export class PostsRepository {
           nickname: string;
           deletedAt: State;
         };
+        _count: {
+          replyLikes: number;
+        };
       }[];
     }[];
   } | null> => {
     return await this.prisma.post.findFirst({
       where: {
         id: id,
-        isPublic: 'TRUE',
-        deletedAt: 'FALSE',
+        isPublic: State.TRUE,
+        deletedAt: State.FALSE,
       },
       select: {
         id: true,
@@ -524,10 +530,16 @@ export class PostsRepository {
         },
         _count: {
           select: {
-            likes: true,
+            // 게시글 좋아요 수
+            likes: {
+              where: {
+                type: Type.POST,
+              },
+            },
+            // 댓글 수
             comments: {
               where: {
-                deletedAt: 'FALSE',
+                deletedAt: State.FALSE,
               },
             },
           },
@@ -535,6 +547,8 @@ export class PostsRepository {
         comments: {
           where: {
             parentId: null,
+            type: Type.COMMENT,
+            deletedAt: State.FALSE,
           },
           select: {
             id: true,
@@ -550,9 +564,21 @@ export class PostsRepository {
                 deletedAt: true,
               },
             },
+            _count: {
+              select: {
+                // 댓글 좋아요 조회
+                likes: {
+                  where: {
+                    type: Type.COMMENT,
+                    replyId: null,
+                  },
+                },
+              },
+            },
             replies: {
               where: {
-                deletedAt: 'FALSE',
+                type: Type.REPLY,
+                deletedAt: State.FALSE,
               },
               select: {
                 id: true,
@@ -566,6 +592,18 @@ export class PostsRepository {
                     id: true,
                     nickname: true,
                     deletedAt: true,
+                  },
+                },
+                _count: {
+                  select: {
+                    replyLikes: {
+                      where: {
+                        type: Type.REPLY,
+                        replyId: {
+                          not: null,
+                        },
+                      },
+                    },
                   },
                 },
               },
